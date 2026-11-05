@@ -186,8 +186,10 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
 
 <!-- 04 등가속도 -->
 <section class="sim" id="p-accel" hidden>
-  <div class="stage"><canvas id="c-accel" style="aspect-ratio:16/13"></canvas>
-    <div class="cap"><span>점: 0.1초 간격 위치(다중 섬광). 점 두 개를 눌러 사이 거리를 재세요</span><span class="legend"><i style="background:var(--accent)"></i>속도-시간</span><span class="legend"><i style="background:var(--force)"></i>위치-시간</span><span>색칠한 넓이 = 변위</span></div></div>
+  <div class="stage"><canvas id="c-accel" style="aspect-ratio:16/12"></canvas>
+    <div class="cap" style="border-bottom:1px solid var(--line)"><b>확대 기록 테이프</b><span>점 간격이 눈으로 구분되도록 자동 확대했습니다. 옆으로 밀어 보며 점 두 개를 누르세요.</span></div>
+    <div id="ac-tapewrap" style="overflow-x:auto;overscroll-behavior-x:contain"><canvas id="c-tape" style="height:130px;display:block"></canvas></div>
+    <div class="cap"><span>점: 0.1초 간격 위치(다중 섬광)</span><span class="legend"><i style="background:var(--accent)"></i>속도-시간</span><span class="legend"><i style="background:var(--force)"></i>위치-시간</span><span>색칠한 넓이 = 변위</span></div></div>
   <div class="side">
     <div class="box concept"><h3>핵심 개념</h3><p>일정한 알짜힘을 받는 물체는 가속도가 일정한 운동을 합니다.</p><div class="formula">a = F/m,  v = v₀ + at,  s = v₀t + ½at²</div></div>
     <div class="box"><h3>조작</h3>
@@ -195,6 +197,7 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
         <label for="ac-m">질량 m</label><input type="range" id="ac-m" min="1" max="10" step="0.5" value="2"><output id="ac-mo"></output>
         <label for="ac-F">알짜힘 F</label><input type="range" id="ac-F" min="-10" max="10" step="0.5" value="4"><output id="ac-Fo"></output>
         <label for="ac-v">처음 속도 v₀</label><input type="range" id="ac-v" min="-4" max="8" step="0.5" value="0"><output id="ac-vo"></output>
+        <label for="ac-T">기록 시간</label><select id="ac-T"><option value="1">1 s</option><option value="2" selected>2 s</option><option value="3">3 s</option><option value="5">5 s</option></select>
       </div>
       <div class="row"><button class="btn primary" id="ac-run">실행</button><button class="btn" id="ac-reset">처음으로</button><button class="btn" id="ac-rec">기록</button></div></div>
     <div class="box"><h3>측정</h3><div class="read">
@@ -213,15 +216,15 @@ footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);paddin
         <span class="em">이동 거리 Δs</span><span class="em" id="ac-ds">–</span>
         <span>평균 속도 Δs/Δt</span><span id="ac-avg">직접 계산해 보세요</span></div>
       <div class="row"><button class="btn" id="ac-show">평균 속도 확인</button><button class="btn" id="ac-seg">기록표에 추가</button></div>
-      <div class="msg" id="ac-msg">실행한 뒤 화면 위쪽 점을 두 번 누르면 A, B가 정해집니다. 아직 지나지 않은 시각의 점은 고를 수 없습니다.</div></div>
+      <div class="msg" id="ac-msg">실행한 뒤 확대 기록 테이프의 점을 두 번 누르면 A, B가 정해집니다. 아직 지나지 않은 시각의 점은 고를 수 없습니다.</div></div>
     <div class="box"><h3>구간 측정 기록</h3><div class="tbl"><table><thead><tr><th>#</th><th>A(s)</th><th>B(s)</th><th>Δt(s)</th><th>Δs(m)</th><th>Δs/Δt (m/s)</th></tr></thead><tbody id="ac-tb2"></tbody></table></div></div>
     <div class="box"><h3>탐구 과제</h3><ol class="task">
-      <li>0.0~0.1 s, 1.0~1.1 s, 2.0~2.1 s 구간의 이동 거리를 재어 각 구간의 평균 속도를 구하자. 이 속도들은 어떻게 변하는가?</li>
-      <li>위에서 구한 속도 변화량을 걸린 시간(1 s)으로 나누어 가속도를 구하고, F/m 값과 비교하자.</li>
+      <li>0.0~0.1 s, 0.5~0.6 s, 1.0~1.1 s, 1.5~1.6 s 구간의 이동 거리를 확대 기록 테이프에서 재어 각 구간의 평균 속도를 구하자. 이 속도들은 어떻게 변하는가?</li>
+      <li>이웃한 구간 사이의 속도 변화량을 걸린 시간(0.5 s)으로 나누어 가속도를 구하고, F/m 값과 비교하자.</li>
       <li>F를 2배로 할 때와 m을 2배로 할 때 v-t 그래프 기울기를 비교하자.</li>
-      <li>v₀ = 6 m/s, F = −6 N, m = 2 kg에서 물체가 멈추는 시각을 계산하고 확인하자.</li>
+      <li>기록 시간을 3 s로 하고 v₀ = 6 m/s, F = −6 N, m = 2 kg에서 물체가 멈추는 시각을 계산하고 확인하자.</li>
       <li>v-t 그래프 넓이와 s-t 그래프에서 읽은 변위가 같은지 확인하자.</li></ol></div>
-    <div class="box"><h3>기록표 (t = 4 s)</h3><div class="tbl"><table><thead><tr><th>#</th><th>m</th><th>F</th><th>v₀</th><th>a</th><th>v(4s)</th><th>s(4s)</th></tr></thead><tbody id="ac-tb"></tbody></table></div></div>
+    <div class="box"><h3>기록표 (t = 1 s)</h3><div class="tbl"><table><thead><tr><th>#</th><th>m</th><th>F</th><th>v₀</th><th>a</th><th>v(4s)</th><th>s(4s)</th></tr></thead><tbody id="ac-tb"></tbody></table></div></div>
   </div>
 </section>
 
@@ -542,13 +545,13 @@ try{const t=localStorage.getItem('fml-tab');if(t)document.querySelector(`#tabs b
 })();
 
 /* ---------- 04 등가속도 ---------- */
-(()=>{const cv=$('c-accel');let t=0,run=false;const T=5;
+(()=>{const cv=$('c-accel'),tc=$('c-tape'),tw=$('ac-tapewrap');let t=0,run=false,T=2;
  bindOut('ac-m',v=>v.toFixed(1)+' kg');bindOut('ac-F',v=>v.toFixed(1)+' N');bindOut('ac-v',v=>v.toFixed(1)+' m/s');
  const P=()=>{const m=+$('ac-m').value,F=+$('ac-F').value,v0=+$('ac-v').value;return {m,F,v0,a:F/m};};
- ['ac-m','ac-F','ac-v'].forEach(id=>$(id).addEventListener('input',()=>{if(!run)t=0;}));
+ ['ac-m','ac-F','ac-v','ac-T'].forEach(id=>$(id).addEventListener('input',()=>{T=+$('ac-T').value;if(!run)t=0;if(t>T)t=0;tw.scrollLeft=0;}));
  $('ac-run').onclick=()=>{if(t>=T)t=0;run=!run;$('ac-run').textContent=run?'일시정지':'실행';};
  $('ac-reset').onclick=()=>{run=false;t=0;$('ac-run').textContent='실행';};
- $('ac-rec').onclick=()=>{const p=P();addRow('ac-tb',[p.m,p.F,p.v0,f(p.a),f(p.v0+p.a*4),f(p.v0*4+.5*p.a*16)]);};
+ $('ac-rec').onclick=()=>{const p=P();addRow('ac-tb',[p.m,p.F,p.v0,f(p.a),f(p.v0+p.a*1),f(p.v0*1+.5*p.a*1)]);};
  function update(dt){if(run){t+=dt;if(t>=T){t=T;run=false;$('ac-run').textContent='다시 실행';}}
   const p=P();$('ac-a').textContent=f(p.a)+' m/s²';$('ac-t').textContent=f(t)+' s';$('ac-vv').textContent=f(p.v0+p.a*t)+' m/s';$('ac-s').textContent=f(p.v0*t+.5*p.a*t*t)+' m';}
  // 두 점 선택
@@ -564,11 +567,36 @@ try{const t=localStorage.getItem('fml-tab');if(t)document.querySelector(`#tabs b
  $('ac-show').onclick=()=>{shown=true;};
  $('ac-seg').onclick=()=>{const m=measure();if(!m||m.dT===0){setMsg('ac-msg','서로 다른 두 점을 고르세요.','no');return;}
   addRow('ac-tb2',[f(m.ta,1),f(m.tb,1),f(m.dT,1),f(m.dS,3),f(m.v,3)]);setMsg('ac-msg','기록했습니다. 다른 구간도 재어 비교해 보세요.');};
- cv.addEventListener('click',e=>{if(!geoA)return;const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-  if(my<geoA.y0||my>geoA.y1)return;const p=P(),maxk=Math.floor(t*10+1e-6);if(maxk<0)return;
-  let best=-1,bd=1e9;for(let k=0;k<=maxk;k++){const d=Math.abs(geoA.sx(sAt(p,k/10))-mx);if(d<bd-0.5){bd=d;best=k;}}
-  if(best<0||bd>12){return;}sel[pick].value=best;shown=false;pick=1-pick;
+ // 확대 기록 테이프
+ let tg=null;
+ function tapeGeo(p){const s=x=>p.v0*x+.5*p.a*x*x;let lo=0,hi=0,minGap=1e9;const N=Math.round(T*10);
+  for(let k=0;k<=N;k++){const v=s(k/10);lo=Math.min(lo,v);hi=Math.max(hi,v);if(k){const g=Math.abs(v-s((k-1)/10));if(g>1e-4)minGap=Math.min(minGap,g);}}
+  if(hi-lo<0.05){hi+=0.025;lo-=0.025;}
+  let ppm=minGap<1e8?22/minGap:200;ppm=Math.max(ppm,(tw.clientWidth-80)/(hi-lo));const W=Math.min(14000,(hi-lo)*ppm+80);ppm=(W-80)/(hi-lo);
+  return {lo,hi,ppm,W,sx:x=>40+(x-lo)*ppm,minPx:minGap*ppm};}
+ tc.addEventListener('click',e=>{if(!tg)return;const r=tc.getBoundingClientRect(),mx=e.clientX-r.left;const p=P(),maxk=Math.floor(t*10+1e-6);
+  let best=-1,bd=1e9;for(let k=0;k<=maxk;k++){const d=Math.abs(tg.sx(sAt(p,k/10))-mx);if(d<bd-0.5){bd=d;best=k;}}
+  if(best<0||bd>10)return;sel[pick].value=best;shown=false;pick=1-pick;
   setMsg('ac-msg',pick===1?`점 A = ${(best/10).toFixed(1)} s. 이제 점 B를 누르세요.`:`점 B = ${(best/10).toFixed(1)} s. 거리를 확인하세요.`);});
+ function drawTape(p){tg=tapeGeo(p);if(Math.abs((parseFloat(tc.style.width)||0)-tg.W)>1)tc.style.width=tg.W+'px';
+  const {ctx,w,h}=fit(tc),sx=tg.sx,maxk=Math.floor(t*10+1e-6),ka=+sel[0].value,kb=+sel[1].value;
+  ctx.fillStyle=C('--grid');ctx.fillRect(0,0,w,h);
+  // 자 눈금
+  const ry=h-34,steps=[0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5];let maj=steps.find(q=>q*tg.ppm>=70)||5;const minr=maj/ (String(maj)[0]==='2'?4:5);
+  ctx.fillStyle=C('--panel');ctx.fillRect(0,ry,w,34);ctx.strokeStyle=C('--muted');ctx.lineWidth=1;
+  for(let x=Math.ceil(tg.lo/minr)*minr;x<=tg.hi+1e-9;x+=minr){const X=sx(x),isMaj=Math.abs(x/maj-Math.round(x/maj))<1e-6;ctx.beginPath();ctx.moveTo(X,ry);ctx.lineTo(X,ry+(isMaj?12:6));ctx.stroke();
+   if(isMaj){const lab=maj<0.01?(x*1000).toFixed(0)+' mm':maj<1?(x*100).toFixed(maj<0.1?1:0)+' cm':x.toFixed(0)+' m';txt(ctx,lab,X,ry+25,C('--muted'),10,'center',MONO);}}
+  // 진행선
+  ctx.strokeStyle=C('--line');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx(tg.lo),44);ctx.lineTo(sx(tg.hi),44);ctx.stroke();
+  for(let k=0;k<=maxk;k++){const X=sx(sAt(p,k/10)),big=k%5===0;ctx.fillStyle=C('--accent');ctx.beginPath();ctx.arc(X,44,big?5:4,0,7);ctx.fill();
+   if(big)txt(ctx,(k/10).toFixed(1)+'s',X,28,C('--accent'),10,'center',MONO);}
+  const mk=(k,lab,col)=>{if(k>maxk)return null;const X=sx(sAt(p,k/10));ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(X,44,9,0,7);ctx.stroke();
+   ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(X,53);ctx.lineTo(X,ry);ctx.stroke();ctx.setLineDash([]);txt(ctx,lab,X,14,col,12,'center',MONO);return X;};
+  const XA=mk(ka,'A',C('--force')),XB=mk(kb,'B',C('--mass'));
+  if(XA!==null&&XB!==null&&ka!==kb){const l=Math.min(XA,XB),r=Math.max(XA,XB),y=ry-14;ctx.strokeStyle=C('--ink');ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(r,y);ctx.stroke();
+   const d=Math.abs(sAt(p,kb/10)-sAt(p,ka/10));ctx.fillStyle=C('--grid');const lx=Math.max(50,(l+r)/2);ctx.fillRect(lx-46,y-17,92,14);txt(ctx,`Δs = ${f(d,3)} m`,lx,y-6,C('--ink'),11,'center',MONO);}
+  if(run&&maxk>=0){const X=sx(sAt(p,t));if(X>tw.scrollLeft+tw.clientWidth-60||X<tw.scrollLeft+20)tw.scrollLeft=Math.max(0,X-tw.clientWidth*0.6);}
+ }
  function draw(){const {ctx,w,h}=fit(cv),p=P();const s=x=>p.v0*x+.5*p.a*x*x,v=x=>p.v0+p.a*x;
   let smin=0,smax=0,vmin=0,vmax=0;for(let i=0;i<=100;i++){const x=T*i/100;smin=Math.min(smin,s(x));smax=Math.max(smax,s(x));vmin=Math.min(vmin,v(x));vmax=Math.max(vmax,v(x));}
   if(smax-smin<1){smax+=.5;smin-=.5}if(vmax-vmin<1){vmax+=.5;vmin-=.5}
@@ -596,19 +624,19 @@ try{const t=localStorage.getItem('fml-tab');if(t)document.querySelector(`#tabs b
   if(p.F!==0)arrow(ctx,cxp,ly-32,cxp+Math.sign(p.F)*(14+Math.abs(p.F)*4),ly-32,C('--force'),3);
   txt(ctx,`F = ${f(p.F,1)} N`,cxp,ly-40,C('--force'),12,'center',MONO);
   for(let k=0;k<=4;k++){const val=smin+(smax-smin)*k/4;txt(ctx,f(val,1)+'m',sx(val),ly-8+ (k===0||k===4?0:0),C('--muted'),10,k===0?'left':k===4?'right':'center',MONO);}
-  measure();
+  measure();drawTape(p);
   // 그래프
   const gy0=Math.max(h*.4,dy+72),gh=h-gy0-24,gw=(w-56)/2;
   function graph(gx,title,fn,lo,hi,col,unit,fill){ctx.strokeStyle=C('--line');ctx.lineWidth=1;ctx.strokeRect(gx,gy0,gw,gh);
    const X=x=>gx+x/T*gw,Y=y=>gy0+gh-(y-lo)/(hi-lo)*gh;
-   ctx.strokeStyle=C('--grid');for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(X(i),gy0);ctx.lineTo(X(i),gy0+gh);ctx.stroke();}
+   ctx.strokeStyle=C('--grid');for(let i=1;i<T;i++){ctx.beginPath();ctx.moveTo(X(i),gy0);ctx.lineTo(X(i),gy0+gh);ctx.stroke();}
    if(lo<0&&hi>0){ctx.strokeStyle=C('--muted');ctx.beginPath();ctx.moveTo(gx,Y(0));ctx.lineTo(gx+gw,Y(0));ctx.stroke();}
    if(fill){ctx.beginPath();ctx.moveTo(X(0),Y(0));for(let i=0;i<=60;i++){const x=t*i/60;ctx.lineTo(X(x),Y(fn(x)));}ctx.lineTo(X(t),Y(0));ctx.closePath();ctx.fillStyle=col;ctx.globalAlpha=.16;ctx.fill();ctx.globalAlpha=1;}
    ctx.strokeStyle=col;ctx.globalAlpha=.25;ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i<=80;i++){const x=T*i/80;i?ctx.lineTo(X(x),Y(fn(x))):ctx.moveTo(X(x),Y(fn(x)));}ctx.stroke();ctx.globalAlpha=1;
    ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<=80;i++){const x=t*i/80;i?ctx.lineTo(X(x),Y(fn(x))):ctx.moveTo(X(x),Y(fn(x)));}ctx.stroke();
    ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(t),Y(fn(t)),5,0,7);ctx.fill();
    txt(ctx,title,gx+8,gy0+18,C('--ink'),13);txt(ctx,f(hi,1)+unit,gx+gw-6,gy0+16,C('--muted'),11,'right',MONO);txt(ctx,f(lo,1)+unit,gx+gw-6,gy0+gh-6,C('--muted'),11,'right',MONO);
-   for(let i=0;i<=5;i++)txt(ctx,i+'',X(i),gy0+gh+14,C('--muted'),11,'center',MONO);}
+   const st=T<=2?0.5:1;for(let i=0;i<=T+1e-9;i+=st)txt(ctx,String(+i.toFixed(1)),X(i),gy0+gh+14,C('--muted'),11,'center',MONO);}
   graph(20,'속도-시간',v,Math.min(0,vmin),Math.max(0,vmax),C('--accent'),' m/s',true);
   graph(36+gw,'위치-시간',s,smin,smax,C('--force'),' m',false);
   txt(ctx,'시간(s)',w/2,h-4,C('--muted'),11,'center');
