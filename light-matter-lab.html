@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>빛과 물질 실험실</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 상단 단원 헤더 + 번호 탭(교과서 차시 순서) → 각 탭은 [실험 무대 | 조작·측정 패널] 2단, 좁으면 1단 */
+:root{
+  --paper:#f3f6fa; --panel:#ffffff; --ink:#142030; --muted:#5b6b7e; --line:#d3dce7; --grid:#e4ebf3;
+  --accent:#1d5bd0; --accent-soft:#e2ebfb; --force:#df6416; --good:#178457; --bad:#c42f3a; --mass:#6b4fc8;
+  --f-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0d131a; --panel:#141c26; --ink:#e2eaf3; --muted:#8fa1b4; --line:#273443; --grid:#1a2430;
+  --accent:#6f9fff; --accent-soft:#1a2a45; --force:#ff9548; --good:#4cc48b; --bad:#ff6a70; --mass:#a98cff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0d131a; --panel:#141c26; --ink:#e2eaf3; --muted:#8fa1b4; --line:#273443; --grid:#1a2430;
+  --accent:#6f9fff; --accent-soft:#1a2a45; --force:#ff9548; --good:#4cc48b; --bad:#ff6a70; --mass:#a98cff; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.home{display:inline-block;font-size:13px;color:var(--accent);text-decoration:none;margin-bottom:6px}.home:hover{text-decoration:underline}
+header h1{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,5vw,44px);line-height:1.05;margin:0;letter-spacing:.01em}
+header .unit{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+header p{margin:0;color:var(--muted);max-width:52ch}
+nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+nav button{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 14px var(--f-body);
+  padding:8px 14px;border-radius:999px;cursor:pointer;display:flex;gap:8px;align-items:center}
+nav button b{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:600}
+nav button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+nav button[aria-selected="true"] b{color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sim{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.sim{grid-template-columns:1fr}}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.stage canvas{display:block;width:100%;touch-action:manipulation}
+.stage .cap{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.box h3{margin:0;font-size:13px;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.concept{background:var(--accent-soft);border-color:transparent}
+.concept p{margin:0}
+.formula{font-family:var(--f-mono);font-size:15px;font-weight:600;color:var(--accent)}
+.ctl{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px 10px}
+.ctl label{font-size:14px;white-space:nowrap}
+.ctl output{font-family:var(--f-mono);font-size:13px;min-width:74px;text-align:right;font-variant-numeric:tabular-nums}
+.ctl .nv{display:inline-flex;align-items:center;gap:4px;justify-content:flex-end;min-width:96px}
+.ctl .nv input{width:66px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-family:var(--f-mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.ctl .nv input::-webkit-outer-spin-button,.ctl .nv input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ctl .nv input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.ctl .nv input.clamp{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--paper))}
+.ctl .nu{font-family:var(--f-mono);font-size:13px;color:var(--muted);min-width:24px}
+input[type=range]{width:100%;accent-color:var(--accent);min-width:0}
+select{font:14px var(--f-body);padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);grid-column:2 / 4}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:500 14px var(--f-body);padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.on{background:var(--force);border-color:var(--force);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.read{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.read span:nth-child(even){font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.read .em{font-weight:700;color:var(--ink)}
+.msg{font-size:14px;padding:8px 10px;border-radius:6px;background:var(--grid);min-height:2.4em}
+.msg.ok{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good);font-weight:700}
+.msg.no{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad);font-weight:700}
+ol.task{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:right;white-space:nowrap}
+th{color:var(--muted);font-weight:500}
+td:first-child,th:first-child{text-align:left}
+.pred{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+.pred input{width:80px;font:14px var(--f-mono);padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.legend{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <a class="home" href="https://hbjhfull-eng.github.io/physics-sim-lab/">← 단원 목록</a>
+    <div class="unit">2022 개정 물리학 · Ⅲ. 빛과 물질</div>
+    <h1>빛과 물질 실험실</h1>
+  </div>
+  <p>빛은 파동처럼 간섭하고 굴절하지만, 금속에 닿을 때는 알갱이처럼 행동합니다. 전자도 파동처럼 간섭합니다. 직접 조작하며 두 얼굴을 확인하세요.</p>
+</header>
+
+<nav role="tablist" id="tabs">
+  <button role="tab" data-t="int" aria-selected="true"><b>01</b>빛의 간섭</button>
+  <button role="tab" data-t="refr"><b>02</b>굴절과 전반사</button>
+  <button role="tab" data-t="lens"><b>03</b>렌즈와 상</button>
+  <button role="tab" data-t="photo"><b>04</b>광전 효과</button>
+  <button role="tab" data-t="matter"><b>05</b>물질파</button>
+  <button role="tab" data-t="atom"><b>06</b>에너지 준위와 스펙트럼</button>
+</nav>
+
+<!-- 01 이중 슬릿 간섭 -->
+<section class="sim" id="p-int">
+  <div class="stage"><canvas id="c-int" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span>위: 두 슬릿에서 퍼지는 물결파 모형(크기 과장). 스크린의 점 P를 끌어 경로차를 확인하세요.</span><span>아래: 실제 스크린 무늬. 밝은 무늬 두 곳을 클릭하면 거리를 잽니다.</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>두 슬릿을 지난 빛이 중첩되어 경로차가 파장의 정수배인 곳은 밝고(보강 간섭), 반 파장의 홀수배인 곳은 어둡습니다(상쇄 간섭). 간섭은 빛이 파동이라는 증거입니다.</p><div class="formula">Δx = Lλ / d</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="in-src">광원</label><select id="in-src"><option value="set">파장을 직접 정한 빛</option><option value="r">미지의 레이저 A</option><option value="g">미지의 레이저 B</option></select>
+        <label for="in-l" id="in-ll">파장 λ</label><input type="range" id="in-l" min="400" max="700" step="10" value="600"><output id="in-lo"></output>
+        <label for="in-d">슬릿 간격 d</label><input type="range" id="in-d" min="0.1" max="0.5" step="0.05" value="0.25"><output id="in-do"></output>
+        <label for="in-L">스크린 거리 L</label><input type="range" id="in-L" min="0.5" max="2" step="0.1" value="1.5"><output id="in-Lo"></output>
+      </div>
+      <div class="row"><button class="btn" id="in-clr">측정점 지우기</button><button class="btn" id="in-rec">기록</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>P에서의 경로차</span><span id="in-pd">–</span>
+      <span>측정한 두 점 사이 거리</span><span id="in-ab">–</span>
+      <span>그 사이 무늬 간격 수 n</span><span><input id="in-n" type="number" min="1" step="1" value="1" style="width:60px;font:13px var(--f-mono);padding:2px 4px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);text-align:right"></span>
+      <span class="em">무늬 간격 Δx</span><span class="em" id="in-dx">–</span></div>
+      <div class="pred"><label for="in-guess">미지의 레이저 파장 예측</label><input id="in-guess" type="number" step="1" placeholder="nm"><button class="btn" id="in-chk">확인</button></div>
+      <div class="msg" id="in-msg">스크린 무늬에서 밝은 무늬의 가운데를 두 번 클릭해 보세요.</div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>P를 위아래로 끌며 경로차가 0, λ, 2λ인 곳과 λ/2, 3λ/2인 곳이 각각 밝은지 어두운지 확인하자.</li>
+      <li>λ, d, L을 하나씩 바꾸며 무늬 간격이 어떻게 변하는지 기록하고 Δx = Lλ/d를 확인하자.</li>
+      <li>여러 개의 무늬를 한꺼번에 재서 n으로 나누면 왜 더 정확한가? ‘미지의 레이저’의 파장을 구해 보자.</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>λ(nm)</th><th>d(mm)</th><th>L(m)</th><th>Δx 측정(mm)</th><th>dΔx/L(nm)</th></tr></thead><tbody id="in-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- 02 굴절과 전반사 -->
+<section class="sim" id="p-refr" hidden>
+  <div class="stage"><canvas id="c-refr" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span>레이저(왼쪽 위 원)를 잡고 끌어 입사각을 바꾸세요.</span><span class="legend"><i style="background:var(--bad)"></i>입사·굴절 광선</span><span>광선의 진하기 = 빛의 세기</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>빛은 속력이 다른 매질로 들어갈 때 꺾입니다. 굴절률이 큰 매질에서 작은 매질로 갈 때 입사각이 임계각보다 크면 빛이 모두 반사됩니다(전반사). 광섬유는 전반사를 이용합니다.</p><div class="formula">n₁ sin θ₁ = n₂ sin θ₂,  sin θc = n₂ / n₁</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="rf-mode">장면</label><select id="rf-mode"><option value="b">두 매질의 경계면</option><option value="f">광섬유</option></select>
+        <label for="rf-n1" id="rf-n1l">매질 1 (위)</label><select id="rf-n1"><option value="1">공기 (n = 1.00)</option><option value="1.33">물 (n = 1.33)</option><option value="1.5" selected>유리 (n = 1.50)</option><option value="2.42">다이아몬드 (n = 2.42)</option></select>
+        <label for="rf-n2" id="rf-n2l">매질 2 (아래)</label><select id="rf-n2"><option value="1" selected>공기 (n = 1.00)</option><option value="1.33">물 (n = 1.33)</option><option value="1.5">유리 (n = 1.50)</option><option value="2.42">다이아몬드 (n = 2.42)</option></select>
+        <label for="rf-th">입사각 θ₁</label><input type="range" id="rf-th" min="0" max="89" step="0.5" value="30"><output id="rf-tho"></output>
+      </div>
+      <div class="pred"><label for="rf-guess">예측: 임계각</label><input id="rf-guess" type="number" step="0.1" placeholder="°"></div>
+      <div class="row"><button class="btn" id="rf-rec">기록</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>입사각 θ₁</span><span id="rf-a">–</span>
+      <span>굴절각 θ₂</span><span id="rf-b">–</span>
+      <span>임계각 θc</span><span id="rf-c">–</span>
+      <span class="em">반사 / 투과 세기</span><span class="em" id="rf-RT">–</span></div>
+      <div class="msg" id="rf-msg">레이저를 끌어 입사각을 바꿔 보세요.</div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>공기 → 유리일 때 입사각과 굴절각을 여러 번 기록하고 sin θ₁ / sin θ₂가 일정한지 확인하자.</li>
+      <li>유리 → 공기에서 입사각을 서서히 키우자. 굴절각이 90°가 되는 순간의 입사각(임계각)을 예측하고 확인하자.</li>
+      <li>공기 → 유리처럼 굴절률이 작은 쪽에서 큰 쪽으로 갈 때도 전반사가 일어나는가?</li>
+      <li>광섬유에서 코어와 클래딩의 굴절률은 어느 쪽이 커야 하는가? 바꿔 보며 확인하자.</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>n₁</th><th>n₂</th><th>θ₁</th><th>θ₂</th><th>sinθ₁/sinθ₂</th></tr></thead><tbody id="rf-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- 03 렌즈와 상 -->
+<section class="sim" id="p-lens" hidden>
+  <div class="stage"><canvas id="c-lens" style="aspect-ratio:16/10"></canvas>
+    <div class="cap"><span>물체(화살표)를 잡고 좌우로 끌어 보세요.</span><span class="legend"><i style="background:var(--force)"></i>광선</span><span class="legend"><i style="background:var(--muted)"></i>허상을 만드는 연장선(점선)</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>볼록 렌즈는 빛을 모으고 오목 렌즈는 퍼뜨립니다. 물체의 위치에 따라 실상(도립)이나 허상(정립)이 생기고, 크기도 달라집니다.</p><div class="formula">1/a + 1/b = 1/f,  배율 m = b / a</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="ln-type">렌즈</label><select id="ln-type"><option value="vx">볼록 렌즈</option><option value="cc">오목 렌즈</option></select>
+        <label for="ln-f">초점 거리 f</label><input type="range" id="ln-f" min="5" max="20" step="1" value="10"><output id="ln-fo"></output>
+        <label for="ln-a">물체 거리 a</label><input type="range" id="ln-a" min="2" max="45" step="0.5" value="25"><output id="ln-ao"></output>
+      </div>
+      <div class="row"><button class="btn" id="ln-hide">상 가리기</button><button class="btn" id="ln-rec">기록</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>상까지 거리 b</span><span id="ln-b">–</span>
+      <span>배율</span><span id="ln-m">–</span>
+      <span class="em">상의 종류</span><span class="em" id="ln-k">–</span>
+      <span>1/a + 1/b</span><span id="ln-s">–</span></div>
+      <div class="msg" id="ln-msg">‘상 가리기’를 누르고 상의 모습을 먼저 예측해 보세요.</div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>볼록 렌즈에서 물체를 2f 바깥, 2f, f와 2f 사이, f 안쪽에 놓고 상의 종류와 크기를 표로 정리하자.</li>
+      <li>물체가 초점에 있을 때 상은 어떻게 되는가? 광선으로 설명하자.</li>
+      <li>오목 렌즈는 물체를 어디에 두어도 어떤 상이 생기는가?</li>
+      <li>기록표의 1/a + 1/b가 1/f와 같은지 확인하자. 돋보기와 카메라는 각각 어느 경우를 이용하는가?</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>렌즈</th><th>f</th><th>a</th><th>b</th><th>배율</th><th>상</th></tr></thead><tbody id="ln-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- 04 광전 효과 -->
+<section class="sim" id="p-photo" hidden>
+  <div class="stage"><canvas id="c-photo" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span>빛 알갱이(광자)가 금속판에 닿으면 전자(파란 점)가 튀어나옵니다.</span><span>아래: 전압-전류 그래프와 최대 운동 에너지-진동수 그래프</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>빛은 에너지가 hf인 광자로 이루어져 있습니다. 광자 하나의 에너지가 금속의 일함수 W보다 커야 전자가 나오고, 빛의 세기는 나오는 전자의 수만 바꿉니다.</p><div class="formula">Ek,max = hf − W = eV₀</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="ph-met">금속판</label><select id="ph-met"><option value="2.14">세슘 (W = 2.14 eV)</option><option value="2.36" selected>나트륨 (W = 2.36 eV)</option><option value="2.87">칼슘 (W = 2.87 eV)</option><option value="4.33">아연 (W = 4.33 eV)</option><option value="x">미지의 금속 X</option></select>
+        <label for="ph-l">빛의 파장 λ</label><input type="range" id="ph-l" min="200" max="700" step="5" value="400"><output id="ph-lo"></output>
+        <label for="ph-I">빛의 세기</label><input type="range" id="ph-I" min="0" max="100" step="5" value="50"><output id="ph-Io"></output>
+        <label for="ph-V">전압 V</label><input type="range" id="ph-V" min="-4" max="2" step="0.05" value="0"><output id="ph-Vo"></output>
+      </div>
+      <div class="row"><button class="btn" id="ph-rec">정지 전압 기록</button><button class="btn" id="ph-clr">그래프 지우기</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>진동수 f</span><span id="ph-f">–</span>
+      <span>광자 1개의 에너지 hf</span><span id="ph-E">–</span>
+      <span class="em">광전류</span><span class="em" id="ph-i">–</span>
+      <span>전자의 최대 운동 에너지</span><span id="ph-K">?</span></div>
+      <div class="msg" id="ph-msg">파장과 세기를 바꾸며 전자가 나오는 조건을 찾아보세요.</div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>나트륨판에 빨간빛(650 nm)을 아무리 세게 비춰도 전자가 나오는가? 파장을 줄이며 전자가 나오기 시작하는 파장을 찾자.</li>
+      <li>전류가 흐를 때 세기를 두 배로 하면 전류와 전자의 최대 운동 에너지는 각각 어떻게 되는가?</li>
+      <li>전압을 음(−)으로 낮추어 전류가 0이 되는 정지 전압 V₀를 찾아 ‘기록’하자. 파장을 바꿔 여러 번 기록하면 그래프의 기울기와 절편에서 무엇을 알 수 있는가?</li>
+      <li>미지의 금속 X의 일함수를 그래프로 구해 보자.</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>금속</th><th>λ(nm)</th><th>f(10¹⁴Hz)</th><th>V₀(V)</th><th>eV₀(eV)</th></tr></thead><tbody id="ph-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- 05 물질파 -->
+<section class="sim" id="p-matter" hidden>
+  <div class="stage"><canvas id="c-matter" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span>입자를 하나씩 쏩니다. 스크린에 도착한 위치가 점으로 쌓이고, 오른쪽 막대는 위치별 도착 개수입니다.</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>전자 같은 입자도 파동의 성질을 가집니다(물질파). 전자를 하나씩 보내도 많이 쌓이면 간섭무늬가 나타납니다. 운동량이 클수록 파장이 짧습니다.</p><div class="formula">λ = h / p = h / √(2meV)</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="mt-p">입자</label><select id="mt-p"><option value="e">전자</option><option value="ph">광자(빛)</option></select>
+        <label for="mt-V" id="mt-Vl">가속 전압 V</label><input type="range" id="mt-V" min="50" max="500" step="10" value="100"><output id="mt-Vo"></output>
+        <label for="mt-L" id="mt-Ll">빛의 파장 λ</label><input type="range" id="mt-L" min="400" max="700" step="10" value="550"><output id="mt-Lo"></output>
+        <label for="mt-r">쏘는 빠르기</label><input type="range" id="mt-r" min="1" max="400" step="1" value="40"><output id="mt-ro"></output>
+      </div>
+      <div class="row"><button class="btn primary" id="mt-go">발사</button><button class="btn" id="mt-one">1개 쏘기</button><button class="btn" id="mt-clr">지우기</button><button class="btn" id="mt-obs">슬릿 관측 끔</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>도착한 입자 수</span><span id="mt-N">0</span>
+      <span>입자의 속력</span><span id="mt-v">–</span>
+      <span>운동량 p</span><span id="mt-pp">–</span>
+      <span class="em">드브로이 파장 λ</span><span class="em" id="mt-l">–</span></div>
+      <div class="msg" id="mt-msg">‘1개 쏘기’를 몇 번 눌러 보세요. 하나의 전자는 어디에 도착할지 예측할 수 있을까요?</div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>전자를 10개만 쏘았을 때와 2000개 이상 쏘았을 때 스크린을 비교하자. 간섭무늬는 언제 드러나는가?</li>
+      <li>가속 전압을 높이면 파장과 무늬 간격은 어떻게 되는가? 전자 현미경이 가속 전압을 높이는 이유와 연결하자.</li>
+      <li>전자가 어느 슬릿을 지나는지 관측하면 무늬가 어떻게 변하는가?</li>
+      <li>광자로 바꿔 같은 실험을 하자. 빛과 전자의 공통점은 무엇인가?</li></ol></div>
+  </div>
+</section>
+
+<!-- 06 에너지 준위와 스펙트럼 -->
+<section class="sim" id="p-atom" hidden>
+  <div class="stage"><canvas id="c-atom" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span>에너지 준위(가로선)를 클릭하면 전자가 그 준위로 옮겨 갑니다. 내려갈 때는 빛을 내고, 올라갈 때는 그만큼의 빛을 흡수해야 합니다.</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>원자 속 전자는 띄엄띄엄한 에너지 준위에만 있을 수 있습니다. 전자가 준위 사이를 옮겨 갈 때 두 준위의 에너지 차만큼의 광자를 내거나 흡수하므로, 기체의 스펙트럼은 선 스펙트럼입니다.</p><div class="formula">Eₙ = −13.6 / n² eV,  hf = Eᵢ − Eₖ</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="at-mode">방식</label><select id="at-mode"><option value="click">준위 클릭하기</option><option value="shoot">광자 쏘아 흡수시키기</option><option value="tube">수소 방전관</option></select>
+        <label for="at-E" id="at-El">쏠 광자 에너지</label><input type="range" id="at-E" min="0.5" max="14" step="0.01" value="10.2"><output id="at-Eo"></output>
+      </div>
+      <div class="row"><button class="btn primary" id="at-go">광자 쏘기</button><button class="btn" id="at-gnd">바닥 상태로</button><button class="btn" id="at-clr">스펙트럼 지우기</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>전자의 현재 준위</span><span id="at-n">n = 1</span>
+      <span>마지막 전이</span><span id="at-tr">–</span>
+      <span>광자 에너지</span><span id="at-pe">–</span>
+      <span class="em">광자 파장</span><span class="em" id="at-pl">–</span></div>
+      <div class="msg" id="at-msg">n = 1에서 위쪽 준위를 클릭하면 어떻게 될까요?</div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>n = 3, 4, 5, 6에서 n = 2로 떨어뜨려 보자. 가시광선 영역에 나타나는 네 선의 색과 파장을 기록하자(발머 계열).</li>
+      <li>n = 1로 떨어지는 빛과 n = 3으로 떨어지는 빛은 각각 어느 영역의 빛인가?</li>
+      <li>‘광자 쏘기’에서 바닥 상태 전자에 10.0 eV와 10.2 eV 광자를 쏘아 비교하자. 왜 하나만 흡수되는가?</li>
+      <li>방전관을 켜고 스펙트럼이 연속적이지 않고 선으로 나타나는 까닭을 설명하자.</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>전이</th><th>ΔE(eV)</th><th>λ(nm)</th><th>계열</th><th>영역</th></tr></thead><tbody id="at-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<footer>2022 개정 교육과정 「물리학」 Ⅲ 빛과 물질 · 빛의 간섭과 굴절 · 렌즈 · 빛과 물질의 이중성 · 원자의 에너지 준위. h = 6.63×10⁻³⁴ J·s, hc ≈ 1240 eV·nm로 계산합니다.</footer>
+</div>
+
+
+<script>
+const $=id=>document.getElementById(id);
+const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MONO='"JetBrains Mono",ui-monospace,monospace', BODY='"IBM Plex Sans KR",system-ui,sans-serif';
+const f=(x,d=2)=>(Math.abs(x)<1e-9?0:x).toFixed(d);
+function fit(cv){const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;
+  if(cv._w!==r.width||cv._h!==r.height||cv._d!==d){cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);cv._w=r.width;cv._h=r.height;cv._d=d;}
+  const ctx=cv.getContext('2d');ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,r.width,r.height);return {ctx,w:r.width,h:r.height};}
+function arrow(ctx,x1,y1,x2,y2,col,lw=3){const L=Math.hypot(x2-x1,y2-y1);if(L<2)return;const a=Math.atan2(y2-y1,x2-x1),hd=Math.min(12,L*.5);
+  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2-hd*.8*Math.cos(a),y2-hd*.8*Math.sin(a));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-hd*Math.cos(a-.4),y2-hd*Math.sin(a-.4));ctx.lineTo(x2-hd*Math.cos(a+.4),y2-hd*Math.sin(a+.4));ctx.closePath();ctx.fill();}
+function txt(ctx,s,x,y,col,size=13,align='left',font=BODY,base='alphabetic'){ctx.fillStyle=col;ctx.font=`${size}px ${font}`;ctx.textAlign=align;ctx.textBaseline=base;ctx.fillText(s,x,y);}
+function rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h);}
+function addRow(id,cells){const tb=$(id),tr=document.createElement('tr');cells.unshift(tb.children.length+1);tr.innerHTML=cells.map(c=>`<td>${c}</td>`).join('');tb.appendChild(tr);}
+function setMsg(id,s,cls=''){const m=$(id);m.textContent=s;m.className='msg '+cls;}
+function bindOut(id,fmt){const i=$(id),o=$(id+'o');const u=()=>o.textContent=fmt(+i.value);i.addEventListener('input',u);u();}
+/* ---------- 탭 ---------- */
+const sims={};let active='int';
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{
+  active=b.dataset.t;document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('.sim').forEach(s=>s.hidden=s.id!=='p-'+active);
+  try{localStorage.setItem('lml-tab',active)}catch(e){}
+}));
+const HC=1240,STAGE='#0b1220',STAGE_LINE='#2a3a52',STAGE_TXT='#c9d6e6',STAGE_MUTED='#7f93ab';
+const XYof=(cv,e)=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+function wlRGB(l){let r=0,g=0,b=0;
+  if(l<380)return [160,130,255];if(l>750)return [150,40,40];
+  if(l<440){r=-(l-440)/60;b=1;}else if(l<490){g=(l-440)/50;b=1;}else if(l<510){g=1;b=-(l-510)/20;}else if(l<580){r=(l-510)/70;g=1;}else if(l<645){r=1;g=-(l-645)/65;}else{r=1;}
+  const fc=l<420?0.35+0.65*(l-380)/40:l<=700?1:0.35+0.65*(750-l)/50;const c=v=>Math.round(255*Math.pow(v*fc,0.8));return [c(r),c(g),c(b)];}
+const wlCol=(l,a=1)=>{const [r,g,b]=wlRGB(l);return `rgba(${r},${g},${b},${a})`;};
+function sci(x,d=2){if(x===0)return '0';const e=Math.floor(Math.log10(Math.abs(x)));const m=x/Math.pow(10,e);return `${m.toFixed(d)}×10${String(e).replace('-','⁻').replace(/\d/g,c=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[c])}`;}
+function stageBg(ctx,x,y,w,h){ctx.fillStyle=STAGE;ctx.fillRect(x,y,w,h);}
+function showRow(id,on){const r=$(id),l=document.querySelector(`label[for="${id}"]`),o=$(id+'o');[l,r,o&&o.nextElementSibling&&o.nextElementSibling.classList.contains('nv')?o.nextElementSibling:null].forEach(e=>{if(e)e.hidden=!on;});if(o&&!(o.nextElementSibling&&o.nextElementSibling.classList.contains('nv')))o.hidden=!on;}
+
+/* ---------- 01 빛의 간섭 ---------- */
+(()=>{const cv=$('c-int');const UNK={r:633,g:532};let marks=[],hov=null,pY=null,dragP=false,geo=null,t=0;
+ const off=document.createElement('canvas');
+ bindOut('in-l',v=>v+' nm');bindOut('in-d',v=>v.toFixed(2)+' mm');bindOut('in-L',v=>v.toFixed(1)+' m');
+ const src=()=>$('in-src').value;
+ const P=()=>({l:src()==='set'?+$('in-l').value:UNK[src()],d:+$('in-d').value,L:+$('in-L').value});
+ function setSrc(){const s=src()!=='set';$('in-l').disabled=s;$('in-lo').textContent=s?'? nm':$('in-l').value+' nm';marks=[];
+  setMsg('in-msg',s?'이 레이저의 파장은 알려져 있지 않습니다. 무늬 간격을 재서 파장을 구하세요.':'스크린 무늬에서 밝은 무늬의 가운데를 두 번 클릭해 보세요.');}
+ $('in-src').addEventListener('change',setSrc);
+ $('in-l').addEventListener('input',()=>{if(src()!=='set')$('in-lo').textContent='? nm';});
+ ['in-l','in-d','in-L'].forEach(id=>$(id).addEventListener('input',()=>{marks=[];}));
+ $('in-clr').onclick=()=>{marks=[];};
+ $('in-n').addEventListener('input',()=>{});
+ const Idist=(y,p)=>{const ph=1000*Math.PI*p.d*y/(p.l*p.L),be=1000*Math.PI*0.02*y/(p.l*p.L);const s=Math.abs(be)<1e-9?1:Math.sin(be)/be;return Math.cos(ph)**2*s*s;};
+ const dxTrue=p=>p.l*p.L/(1000*p.d);
+ const dist=()=>marks.length===2?Math.abs(marks[1]-marks[0]):null;
+ const nval=()=>Math.max(1,Math.round(+$('in-n').value||1));
+ $('in-rec').onclick=()=>{const D=dist();if(D==null){setMsg('in-msg','먼저 스크린 무늬에서 두 점을 클릭해 거리를 재세요.','no');return;}
+  const p=P(),dx=D/nval();addRow('in-tb',[src()==='set'?p.l:'?',p.d.toFixed(2),p.L.toFixed(1),dx.toFixed(2),f(p.d*dx/p.L*1000,0)]);
+  const err=Math.abs(dx-dxTrue(p))/dxTrue(p);setMsg('in-msg',err<0.04?'정확하게 측정했습니다. 다른 조건으로도 기록해 보세요.':`기록했습니다. 측정값이 이론값과 ${f(err*100,0)}% 다릅니다. 두 점이 밝은 무늬의 가운데인지, n이 맞는지 확인하세요.`,err<0.04?'ok':'');};
+ $('in-chk').onclick=()=>{if(src()==='set'){setMsg('in-msg','광원을 ‘미지의 레이저’로 바꾼 뒤 예측해 보세요.','no');return;}
+  const g=+$('in-guess').value,l=UNK[src()];if(!g){setMsg('in-msg','예측한 파장을 nm 단위로 입력하세요.','no');return;}
+  const ok=Math.abs(g-l)/l<0.03;setMsg('in-msg',ok?`정답입니다! 이 레이저의 파장은 ${l} nm입니다.`:`아직 아닙니다(오차 3% 이내면 정답). 여러 무늬를 한꺼번에 재 보세요.`,ok?'ok':'no');};
+ cv.addEventListener('pointerdown',e=>{if(!geo)return;const [mx,my]=XYof(cv,e);
+  if(my<geo.th){if(Math.abs(mx-geo.xS)<30){dragP=true;pY=Math.max(10,Math.min(geo.th-10,my));cv.setPointerCapture(e.pointerId);}return;}
+  if(my>=geo.sy0&&my<=geo.sy1){const mm=Math.round(geo.toMm(mx)/0.05)*0.05;if(Math.abs(mm)>12)return;if(marks.length>=2)marks=[];marks.push(mm);
+   if(marks.length===2)setMsg('in-msg',`두 점 사이 거리 ${f(dist(),2)} mm. 그 사이에 무늬 간격이 몇 개인지 세어 n에 적으세요.`);}});
+ cv.addEventListener('pointermove',e=>{if(!geo)return;const [mx,my]=XYof(cv,e);if(dragP){pY=Math.max(10,Math.min(geo.th-10,my));return;}
+  hov=(my>=geo.sy0&&my<=geo.sy1)?geo.toMm(mx):null;});
+ cv.addEventListener('pointerup',()=>{dragP=false;});cv.addEventListener('pointerleave',()=>{hov=null;});
+ function update(dt){t+=dt;const D=dist();$('in-ab').textContent=D==null?'–':f(D,2)+' mm';$('in-dx').textContent=D==null?'–':f(D/nval(),2)+' mm';}
+ function draw(){const {ctx,w,h}=fit(cv),p=P();const th=Math.round(h*.58);
+  // --- 위: 물결파 모형
+  const xs=Math.round(w*.2),xS=w-34,lv=12+(p.l-400)/300*12,dv=30+(p.d-0.1)/0.4*70,k=2*Math.PI/lv,wt=t*2*Math.PI*1.1,y1=th/2-dv/2,y2=th/2+dv/2;
+  const cell=3,gw=Math.ceil(w/cell),gh=Math.ceil(th/cell);if(off.width!==gw||off.height!==gh){off.width=gw;off.height=gh;}
+  const oc=off.getContext('2d'),img=oc.createImageData(gw,gh),dd=img.data,[cr,cg,cb]=wlRGB(p.l),B=[11,18,32];
+  for(let j=0;j<gh;j++){const y=j*cell+1.5;for(let i=0;i<gw;i++){const x=i*cell+1.5;let v;
+    if(x<xs){v=(Math.cos(k*(x-xs)-wt)+1)/2*0.75;}else if(x>xS){v=0;}else{const r1=Math.hypot(x-xs,y-y1),r2=Math.hypot(x-xs,y-y2);v=(Math.cos(k*r1-wt)+Math.cos(k*r2-wt)+2)/4;v=v*v*1.1;}
+    const q=(j*gw+i)*4;dd[q]=B[0]+(cr-B[0])*v;dd[q+1]=B[1]+(cg-B[1])*v;dd[q+2]=B[2]+(cb-B[2])*v;dd[q+3]=255;}}
+  oc.putImageData(img,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(off,0,0,gw*cell,gh*cell);
+  // 슬릿 벽
+  ctx.fillStyle='#d9e2ee';ctx.fillRect(xs-3,0,6,y1-3);ctx.fillRect(xs-3,y1+3,6,y2-y1-6);ctx.fillRect(xs-3,y2+3,6,th-y2-3);
+  // 스크린과 시간 평균 세기
+  for(let y=0;y<th;y+=2){const r1=Math.hypot(xS-xs,y-y1),r2=Math.hypot(xS-xs,y-y2),I=Math.cos(Math.PI*(r1-r2)/lv)**2;ctx.fillStyle=wlCol(p.l,0.15+0.85*I);ctx.fillRect(xS+6,y,14,2);}
+  ctx.fillStyle='#d9e2ee';ctx.fillRect(xS,0,5,th);
+  if(pY==null)pY=th/2-dv*0.9;
+  const r1=Math.hypot(xS-xs,pY-y1),r2=Math.hypot(xS-xs,pY-y2),pd=Math.abs(r1-r2)/lv;
+  ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(xs,y1);ctx.lineTo(xS,pY);ctx.moveTo(xs,y2);ctx.lineTo(xS,pY);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(xS,pY,7,0,7);ctx.fill();txt(ctx,'P',xS-12,pY-10,'#fff',13,'right',MONO);
+  txt(ctx,'S₁',xs-8,y1-6,STAGE_TXT,12,'right',MONO);txt(ctx,'S₂',xs-8,y2+16,STAGE_TXT,12,'right',MONO);
+  const frac=pd-Math.floor(pd),kind=frac<0.12||frac>0.88?'보강(밝음)':Math.abs(frac-0.5)<0.12?'상쇄(어두움)':'중간';
+  rrect(ctx,10,th-30,250,22,5);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fill();txt(ctx,`경로차 |S₁P − S₂P| = ${f(pd,2)} λ → ${kind}`,18,th-15,'#fff',12,'left',MONO);
+  rrect(ctx,6,6,168,20,5);ctx.fillStyle='rgba(0,0,0,.6)';ctx.fill();txt(ctx,'물결파 모형 (파장·간격 과장)',12,20,'#fff',11);
+  $('in-pd').textContent=`${f(pd,2)} λ · ${kind}`;
+  // --- 아래: 실제 스크린 무늬
+  const sy0=th+44,bandH=46,sy1=sy0+bandH,x0=30,x1=w-30,toPx=mm=>x0+(mm+12)/24*(x1-x0),toMm=px=>(px-x0)/(x1-x0)*24-12;
+  geo={th,xS,sy0,sy1,toMm};
+  ctx.fillStyle=C('--panel');ctx.fillRect(0,th,w,h-th);
+  txt(ctx,`스크린 무늬 (실제 크기, L = ${p.L.toFixed(1)} m)`,x0,th+18,C('--muted'),12);
+  // 세기 그래프
+  ctx.strokeStyle=C('--ink');ctx.lineWidth=1.5;ctx.beginPath();for(let px=x0;px<=x1;px++){const I=Idist(toMm(px),p),y=sy0-6-I*14;px===x0?ctx.moveTo(px,y):ctx.lineTo(px,y);}ctx.stroke();
+  stageBg(ctx,x0,sy0,x1-x0,bandH);for(let px=x0;px<x1;px++){ctx.fillStyle=wlCol(p.l,Idist(toMm(px+.5),p));ctx.fillRect(px,sy0,1,bandH);}
+  // 자
+  const ry=sy1+4;ctx.strokeStyle=C('--muted');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,ry);ctx.lineTo(x1,ry);
+  for(let mm=-12;mm<=12;mm+=0.5){const X=toPx(mm),L=Number.isInteger(mm)?(mm%2===0?10:7):4;ctx.moveTo(X,ry);ctx.lineTo(X,ry+L);}ctx.stroke();
+  for(let mm=-12;mm<=12;mm+=2)txt(ctx,mm+'',toPx(mm),ry+22,C('--muted'),10,'center',MONO);txt(ctx,'mm',x1,ry+34,C('--muted'),10,'right',MONO);
+  if(hov!=null&&Math.abs(hov)<=12){ctx.strokeStyle='rgba(255,255,255,.5)';ctx.beginPath();ctx.moveTo(toPx(hov),sy0);ctx.lineTo(toPx(hov),sy1);ctx.stroke();}
+  marks.forEach((m,i)=>{const X=toPx(m);ctx.strokeStyle=C('--force');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(X,sy0-24);ctx.lineTo(X,sy1);ctx.stroke();txt(ctx,'AB'[i],X,sy0-28,C('--force'),12,'center',MONO);});
+  if(marks.length===2){const a=toPx(marks[0]),b=toPx(marks[1]),yy=ry+44;arrow(ctx,(a+b)/2,yy,Math.min(a,b),yy,C('--force'),1.5);arrow(ctx,(a+b)/2,yy,Math.max(a,b),yy,C('--force'),1.5);
+   txt(ctx,f(dist(),2)+' mm',(a+b)/2,yy+16,C('--force'),12,'center',MONO);}
+ }
+ setSrc();sims.int={update,draw};
+})();
+
+/* ---------- 02 굴절과 전반사 ---------- */
+(()=>{const cv=$('c-refr');let drag=false,geo=null,t=0,wasTIR=false;
+ bindOut('rf-th',v=>v.toFixed(1)+'°');
+ const mode=()=>$('rf-mode').value;
+ const NAME={'1':'공기','1.33':'물','1.5':'유리','2.42':'다이아몬드'};
+ function setMode(){const fb=mode()==='f';$('rf-n1l').textContent=fb?'코어':'매질 1 (위)';$('rf-n2l').textContent=fb?'클래딩':'매질 2 (아래)';
+  if(fb){$('rf-n1').value='1.5';$('rf-n2').value='1.33';$('rf-th').value=75;}else{$('rf-n1').value='1.5';$('rf-n2').value='1';$('rf-th').value=30;}
+  $('rf-th').dispatchEvent(new Event('input'));setMsg('rf-msg',fb?'입사각(코어 경계면에서 법선과 이루는 각)을 바꾸며 빛이 끝까지 전달되는 조건을 찾으세요.':'레이저를 끌어 입사각을 바꿔 보세요.');}
+ $('rf-mode').addEventListener('change',setMode);
+ const P=()=>({n1:+$('rf-n1').value,n2:+$('rf-n2').value,th:+$('rf-th').value});
+ function fres(n1,n2,a){const s=n1/n2*Math.sin(a);if(s>=1)return {tir:true,R:1,T:0,b:null};const b=Math.asin(s),ca=Math.cos(a),cb=Math.cos(b);
+  const rs=(n1*ca-n2*cb)/(n1*ca+n2*cb),rp=(n1*cb-n2*ca)/(n1*cb+n2*ca);const R=(rs*rs+rp*rp)/2;return {tir:false,R,T:1-R,b};}
+ const crit=p=>p.n1>p.n2?Math.asin(p.n2/p.n1)*180/Math.PI:null;
+ $('rf-rec').onclick=()=>{const p=P(),r=fres(p.n1,p.n2,p.th*Math.PI/180);
+  addRow('rf-tb',[p.n1,p.n2,p.th.toFixed(1)+'°',r.tir?'전반사':f(r.b*180/Math.PI,1)+'°',r.tir||p.th===0?'–':f(Math.sin(p.th*Math.PI/180)/Math.sin(r.b),3)]);};
+ cv.addEventListener('pointerdown',e=>{if(!geo||mode()!=='b')return;const [mx,my]=XYof(cv,e);if(Math.hypot(mx-geo.lx,my-geo.ly)>34)return;drag=true;cv.setPointerCapture(e.pointerId);});
+ cv.addEventListener('pointermove',e=>{if(!drag)return;const [mx,my]=XYof(cv,e);let a=Math.atan2(geo.x0-mx,geo.y0-my)*180/Math.PI;a=Math.max(0,Math.min(89,a));$('rf-th').value=Math.round(a*2)/2;$('rf-th').dispatchEvent(new Event('input'));});
+ cv.addEventListener('pointerup',()=>{drag=false;});
+ function medium(ctx,x,y,w,h,n){ctx.fillStyle=`rgba(90,150,230,${0.05+(n-1)*0.22})`;ctx.fillRect(x,y,w,h);}
+ function ray(ctx,x1,y1,x2,y2,I,lw=3){ctx.strokeStyle=`rgba(230,40,50,${Math.max(0.06,Math.min(1,I))})`;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+ function update(dt){t+=dt;const p=P(),a=p.th*Math.PI/180,r=fres(p.n1,p.n2,a),c=crit(p);
+  $('rf-a').textContent=p.th.toFixed(1)+'°';$('rf-c').textContent=c==null?'없음 (n₁ ≤ n₂)':f(c,1)+'°';
+  if(mode()==='b'){$('rf-b').textContent=r.tir?'– (전반사)':f(r.b*180/Math.PI,1)+'°';$('rf-RT').textContent=`${f(r.R*100,0)}% / ${f(r.T*100,0)}%`;}
+  if(r.tir&&!wasTIR){const g=$('rf-guess').value;let m=mode()==='f'?'코어 경계면에서 전반사가 일어나 빛이 광섬유를 따라 전달됩니다.':'전반사! 빛이 경계면을 통과하지 못하고 모두 반사됩니다.';
+   if(g!==''&&c!=null){const ok=Math.abs(+g-c)<1;m=(ok?'임계각 예측 적중! ':`예측 ${g}°, 실제 임계각 ${f(c,1)}°. `)+m;}setMsg('rf-msg',m,'ok');}
+  if(!r.tir&&wasTIR)setMsg('rf-msg',mode()==='f'?'경계면에서 빛의 일부가 클래딩 밖으로 빠져나갑니다.':'빛의 일부는 반사되고 나머지는 굴절하여 매질 2로 들어갑니다.');
+  wasTIR=r.tir;}
+ function draw(){const {ctx,w,h}=fit(cv),p=P(),a=p.th*Math.PI/180,r=fres(p.n1,p.n2,a);
+  if(mode()==='b'){const x0=w*.5,y0=h*.5,R=Math.min(w,h)*.42;geo={x0,y0};
+   medium(ctx,0,0,w,y0,p.n1);medium(ctx,0,y0,w,h-y0,p.n2);ctx.strokeStyle=C('--ink');ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,y0);ctx.lineTo(w,y0);ctx.stroke();
+   ctx.strokeStyle=C('--muted');ctx.setLineDash([6,5]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,y0-R-10);ctx.lineTo(x0,y0+R+10);ctx.stroke();ctx.setLineDash([]);txt(ctx,'법선',x0+6,y0-R,C('--muted'),11);
+   txt(ctx,`매질 1: ${NAME[$('rf-n1').value]} (n₁ = ${p.n1.toFixed(2)})`,14,22,C('--ink'),13);txt(ctx,`매질 2: ${NAME[$('rf-n2').value]} (n₂ = ${p.n2.toFixed(2)})`,14,h-14,C('--ink'),13);
+   const lx=x0-R*Math.sin(a),ly=y0-R*Math.cos(a);geo.lx=lx;geo.ly=ly;
+   ray(ctx,lx,ly,x0,y0,1,3.5);arrow(ctx,lx+(x0-lx)*.45,ly+(y0-ly)*.45,lx+(x0-lx)*.55,ly+(y0-ly)*.55,'rgba(230,40,50,1)',3);
+   ray(ctx,x0,y0,x0+R*Math.sin(a),y0-R*Math.cos(a),r.R,3);
+   if(!r.tir){ray(ctx,x0,y0,x0+R*Math.sin(r.b),y0+R*Math.cos(r.b),r.T,3);
+    ctx.strokeStyle=C('--good');ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x0,y0,48,Math.PI/2-r.b,Math.PI/2);ctx.stroke();txt(ctx,'θ₂',x0+56*Math.sin(r.b/2)+4,y0+58*Math.cos(r.b/2)+6,C('--good'),13,'left',MONO);}
+   ctx.strokeStyle=C('--force');ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x0,y0,40,-Math.PI/2-a,-Math.PI/2);ctx.stroke();txt(ctx,'θ₁',x0-48*Math.sin(a/2)-6,y0-48*Math.cos(a/2),C('--force'),13,'right',MONO);
+   const c=crit(p);if(c!=null){const ca=c*Math.PI/180;ctx.strokeStyle=C('--mass');ctx.setLineDash([3,4]);ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0-R*.8*Math.sin(ca),y0-R*.8*Math.cos(ca));ctx.stroke();ctx.setLineDash([]);
+    txt(ctx,'임계각',x0-R*.82*Math.sin(ca)-4,y0-R*.82*Math.cos(ca)-4,C('--mass'),11,'right');}
+   // 레이저
+   ctx.save();ctx.translate(lx,ly);ctx.rotate(Math.atan2(y0-ly,x0-lx));rrect(ctx,-34,-9,40,18,4);ctx.fillStyle=C('--ink');ctx.fill();ctx.restore();
+   ctx.strokeStyle=C('--accent');ctx.lineWidth=2;ctx.globalAlpha=drag?.9:.45;ctx.beginPath();ctx.arc(lx,ly,24,0,7);ctx.stroke();ctx.globalAlpha=1;
+   if(r.tir)txt(ctx,'전반사',x0+20,y0+26,C('--bad'),16,'left',BODY);
+  }else{ // 광섬유
+   geo=null;const fx0=40,fx1=w-30,cy=h*.46,cr=46,cl=28;
+   medium(ctx,fx0,cy-cr-cl,fx1-fx0,cl,p.n2);medium(ctx,fx0,cy+cr,fx1-fx0,cl,p.n2);medium(ctx,fx0,cy-cr,fx1-fx0,2*cr,p.n1);
+   ctx.strokeStyle=C('--line');ctx.lineWidth=1;ctx.strokeRect(fx0,cy-cr-cl,fx1-fx0,2*(cr+cl));ctx.beginPath();ctx.moveTo(fx0,cy-cr);ctx.lineTo(fx1,cy-cr);ctx.moveTo(fx0,cy+cr);ctx.lineTo(fx1,cy+cr);ctx.stroke();
+   txt(ctx,`코어 n = ${p.n1.toFixed(2)}`,fx1-8,cy+cr-8,C('--ink'),12,'right');txt(ctx,`클래딩 n = ${p.n2.toFixed(2)}`,fx0+8,cy-cr-8,C('--muted'),11);
+   // 경로
+   const dirx=Math.sin(a),diry=Math.cos(a);let x=fx0,y=cy,dy=-1,I=1,pts=[[x,y,I]],guard=0;const rr=fres(p.n1,p.n2,a);
+   while(x<fx1&&I>0.02&&guard++<600){const yt=dy<0?cy-cr:cy+cr,dist=Math.abs(yt-y)/diry,nx=x+dist*dirx;
+    if(nx>=fx1){const k=(fx1-x)/dirx;pts.push([fx1,y+dy*k*diry,I]);x=fx1;break;}
+    x=nx;y=yt;pts.push([x,y,I]);
+    if(!rr.tir){const ex=x+Math.sin(rr.b)*cl*1.6,ey=y+dy*Math.cos(rr.b)*cl*1.6;ray(ctx,x,y,ex,ey,I*rr.T,2);I*=rr.R;}
+    dy=-dy;}
+   for(let i=1;i<pts.length;i++)ray(ctx,pts[i-1][0],pts[i-1][1],pts[i][0],pts[i][1],pts[i-1][2],2.5);
+   ray(ctx,10,cy,fx0,cy,1,3);const outI=x>=fx1?I:0;
+   // 빛 펄스
+   let L=0;const seg=[];for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(d);L+=d;}
+   if(L>0){let s=(t*420)%L,i=0;while(i<seg.length-1&&s>seg[i]){s-=seg[i];i++;}const u=s/seg[i],X=pts[i][0]+(pts[i+1][0]-pts[i][0])*u,Y=pts[i][1]+(pts[i+1][1]-pts[i][1])*u;
+    ctx.fillStyle=`rgba(255,80,80,${Math.max(.25,pts[i][2])})`;ctx.beginPath();ctx.arc(X,Y,5,0,7);ctx.fill();}
+   rrect(ctx,fx1-150,cy+cr+cl+14,150,46,6);ctx.fillStyle=C('--grid');ctx.fill();txt(ctx,'끝에 도달한 빛',fx1-140,cy+cr+cl+32,C('--muted'),12);txt(ctx,f(outI*100,0)+' %',fx1-140,cy+cr+cl+52,outI>0.9?C('--good'):C('--bad'),16,'left',MONO);
+   txt(ctx,'입사각 θ₁: 빛이 코어 경계면에서 법선과 이루는 각',fx0,h-16,C('--muted'),12);
+   $('rf-b').textContent=rr.tir?'– (전반사)':f(rr.b*180/Math.PI,1)+'° (빠져나감)';$('rf-RT').textContent=`끝까지 ${f(outI*100,0)}%`;
+  }}
+ setMode();sims.refr={update,draw};
+})();
+
+/* ---------- 03 렌즈와 상 ---------- */
+(()=>{const cv=$('c-lens');let hide=false,drag=false,geo=null;
+ bindOut('ln-f',v=>v+' cm');bindOut('ln-a',v=>v.toFixed(1)+' cm');
+ const P=()=>{const vx=$('ln-type').value==='vx',F=+$('ln-f').value;return {vx,F,f:vx?F:-F,a:+$('ln-a').value};};
+ function img(p){if(Math.abs(p.a-p.f)<1e-9)return {inf:true};const b=p.a*p.f/(p.a-p.f);return {inf:false,b,m:-b/p.a};}
+ function kind(p,q){if(q.inf)return '상이 생기지 않음';const real=q.b>0,mag=Math.abs(q.m);return `${real?'실상':'허상'} · ${q.m<0?'도립':'정립'} · ${Math.abs(mag-1)<0.01?'같은 크기':mag>1?'확대':'축소'}`;}
+ $('ln-hide').onclick=()=>{hide=!hide;$('ln-hide').textContent=hide?'상 보이기':'상 가리기';$('ln-hide').classList.toggle('on',hide);
+  setMsg('ln-msg',hide?'상의 위치, 크기, 바로 섰는지 거꾸로 섰는지를 예측한 뒤 ‘상 보이기’를 누르세요.':'예측과 비교해 보세요.');};
+ $('ln-rec').onclick=()=>{const p=P(),q=img(p);addRow('ln-tb',[p.vx?'볼록':'오목',p.F,p.a.toFixed(1),q.inf?'∞':f(q.b,1),q.inf?'–':f(Math.abs(q.m),2),kind(p,q).split(' · ').slice(0,2).join(' ')]);};
+ ['ln-type','ln-f','ln-a'].forEach(id=>$(id).addEventListener('input',()=>{}));
+ cv.addEventListener('pointerdown',e=>{if(!geo)return;const [mx,my]=XYof(cv,e);if(Math.abs(mx-geo.ox)>22||my<geo.oy-geo.ho-20||my>geo.oy+10)return;drag=true;cv.setPointerCapture(e.pointerId);});
+ cv.addEventListener('pointermove',e=>{if(!drag)return;const [mx]=XYof(cv,e);let a=(geo.lx-mx)/geo.s;a=Math.max(2,Math.min(45,Math.round(a*2)/2));$('ln-a').value=a;$('ln-a').dispatchEvent(new Event('input'));});
+ cv.addEventListener('pointerup',()=>{drag=false;});
+ function update(){const p=P(),q=img(p);
+  $('ln-b').textContent=hide?'?':q.inf?'∞':`${f(Math.abs(q.b),1)} cm (${q.b>0?'렌즈 뒤':'물체 쪽'})`;
+  $('ln-m').textContent=hide?'?':q.inf?'–':f(Math.abs(q.m),2)+' 배';$('ln-k').textContent=hide?'?':kind(p,q);
+  $('ln-s').textContent=hide||q.inf?'–':`${f(1/p.a+1/q.b,3)} (1/f = ${f(1/p.f,3)})`;}
+ function draw(){const {ctx,w,h}=fit(cv),p=P(),q=img(p);const lx=w/2,ay=h*.56,s=(w/2-24)/48,X=c=>lx+c*s,ho=Math.min(56,h*.17),Lh=h*.42;
+  geo={lx,s,ox:X(-p.a),oy:ay,ho};
+  ctx.strokeStyle=C('--line');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,ay);ctx.lineTo(w,ay);ctx.stroke();
+  // 눈금
+  for(let c=-45;c<=45;c+=5){ctx.beginPath();ctx.moveTo(X(c),ay-3);ctx.lineTo(X(c),ay+3);ctx.stroke();if(c%10===0)txt(ctx,Math.abs(c)+'',X(c),ay+16,C('--muted'),9,'center',MONO);}
+  txt(ctx,'cm',w-8,ay+16,C('--muted'),9,'right',MONO);
+  // 렌즈
+  ctx.fillStyle=C('--accent-soft');ctx.strokeStyle=C('--accent');ctx.lineWidth=1.5;ctx.beginPath();
+  if(p.vx){ctx.moveTo(lx,ay-Lh);ctx.quadraticCurveTo(lx+22,ay,lx,ay+Lh);ctx.quadraticCurveTo(lx-22,ay,lx,ay-Lh);}
+  else{ctx.moveTo(lx-14,ay-Lh);ctx.lineTo(lx+14,ay-Lh);ctx.quadraticCurveTo(lx+3,ay,lx+14,ay+Lh);ctx.lineTo(lx-14,ay+Lh);ctx.quadraticCurveTo(lx-3,ay,lx-14,ay-Lh);}
+  ctx.closePath();ctx.fill();ctx.stroke();
+  [[-p.F,'F'],[p.F,'F'],[-2*p.F,'2F'],[2*p.F,'2F']].forEach(([c,l])=>{if(Math.abs(c)>47)return;ctx.fillStyle=C('--ink');ctx.beginPath();ctx.arc(X(c),ay,3.5,0,7);ctx.fill();txt(ctx,l,X(c),ay-8,C('--ink'),12,'center',MONO);});
+  // 물체
+  const ox=X(-p.a);arrow(ctx,ox,ay,ox,ay-ho,C('--accent'),4);
+  ctx.strokeStyle=C('--accent');ctx.globalAlpha=drag?.8:.3;ctx.lineWidth=1.5;ctx.strokeRect(ox-16,ay-ho-14,32,ho+20);ctx.globalAlpha=1;txt(ctx,'물체',ox,ay+30,C('--accent'),12,'center');
+  // 광선
+  const tip=[ox,ay-ho];const yl=[ho,0,Math.abs(p.f-p.a)<1e-9?null:ho*p.f/(p.f-p.a)];
+  const col=C('--force');
+  yl.forEach((v,i)=>{if(v==null)return;const ly=ay-v;if(Math.abs(v)>Lh+200)return;
+   ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(tip[0],tip[1]);
+   if(i===2&&!p.vx){ctx.lineTo(lx,ly);}else ctx.lineTo(lx,ly);ctx.stroke();
+   if(!p.vx&&i===2){ctx.setLineDash([3,4]);ctx.strokeStyle=C('--muted');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(X(p.F),ay);ctx.stroke();ctx.setLineDash([]);}
+   if(!p.vx&&i===0){}
+   if(hide)return;
+   let dx,dy;if(q.inf){dx=p.a*s;dy=ho;}else{const ix=X(q.b),iy=ay-q.m*ho;dx=(ix-lx)*Math.sign(q.b);dy=(iy-ly)*Math.sign(q.b);
+    if(q.b<0){ctx.setLineDash([4,4]);ctx.strokeStyle=C('--muted');ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(ix,iy);ctx.stroke();ctx.setLineDash([]);}}
+   const k=3000/Math.hypot(dx,dy);ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lx+dx*k,ly+dy*k);ctx.stroke();});
+  if(!hide&&!q.inf){const ix=X(q.b),iy=ay-q.m*ho;if(ix>-50&&ix<w+50){
+   if(q.b>0)arrow(ctx,ix,ay,ix,iy,C('--good'),4);else{ctx.setLineDash([5,4]);arrow(ctx,ix,ay,ix,iy,C('--good'),3);ctx.setLineDash([]);}
+   txt(ctx,q.b>0?'실상':'허상',ix,q.m<0?ay-8:ay+30,C('--good'),12,'center');}
+   else txt(ctx,'상이 화면 밖에 있습니다 →',w-10,24,C('--good'),12,'right');}
+  if(!hide&&q.inf)txt(ctx,'굴절한 빛이 평행하게 나가 상이 생기지 않습니다',w-10,24,C('--good'),12,'right');
+  if(hide){ctx.fillStyle=C('--grid');ctx.globalAlpha=.7;ctx.fillRect(lx+4,0,w-lx-4,h);ctx.globalAlpha=1;txt(ctx,'상을 예측해 보세요',lx+(w-lx)/2,40,C('--muted'),14,'center');}
+ }
+ sims.lens={update,draw};
+})();
+
+/* ---------- 04 광전 효과 ---------- */
+(()=>{const cv=$('c-photo');const WX=3.20;let photons=[],elecs=[],acc=0,flash=0,trail=[],key='',pts=[];const IMAX=2.0;
+ bindOut('ph-l',v=>v+' nm');bindOut('ph-I',v=>v+' %');bindOut('ph-V',v=>(v>0?'+':'')+v.toFixed(2)+' V');
+ const W=()=>$('ph-met').value==='x'?WX:+$('ph-met').value;
+ const metName=()=>$('ph-met').selectedOptions[0].textContent.split(' ')[0];
+ const P=()=>({l:+$('ph-l').value,I:+$('ph-I').value,V:+$('ph-V').value,W:W()});
+ const Kmax=p=>HC/p.l-p.W;
+ const cur=(p,V=p.V)=>{const K=Kmax(p);if(K<=0||p.I===0)return 0;const fr=V>=0?1:Math.max(0,1-(-V)/K);return IMAX*p.I/100*fr;};
+ $('ph-clr').onclick=()=>{pts=[];trail=[];};
+ $('ph-rec').onclick=()=>{const p=P(),K=Kmax(p);
+  if(p.I===0){setMsg('ph-msg','빛을 비춰야 합니다. 세기를 올리세요.','no');return;}
+  if(K<=0){setMsg('ph-msg','전자가 나오지 않아 정지 전압을 잴 수 없습니다. 파장을 줄여 보세요.','no');return;}
+  if(cur(p)>0){setMsg('ph-msg','아직 전류가 흐릅니다. 전압을 더 낮추어 전류가 막 0이 되는 곳을 찾으세요.','no');return;}
+  if(cur(p,p.V+0.1)===0){setMsg('ph-msg','전류가 0이지만 정지 전압보다 너무 낮습니다. 전압을 조금씩 올려 전류가 막 0이 되는 곳을 찾으세요.','no');return;}
+  const V0=-p.V,fq=3000/p.l;pts.push({fq,K:V0,met:$('ph-met').value});addRow('ph-tb',[metName(),p.l,f(fq,2),f(V0,2),f(V0,2)]);
+  setMsg('ph-msg',`정지 전압 V₀ = ${f(V0,2)} V → 전자의 최대 운동 에너지 ${f(V0,2)} eV. 파장을 바꿔 더 기록하세요.`,'ok');};
+ ['ph-l','ph-I','ph-met'].forEach(id=>$(id).addEventListener('input',()=>{photons=[];}));
+ $('ph-met').addEventListener('change',()=>{photons=[];elecs=[];});
+ let lastState='';
+ function update(dt){const p=P(),K=Kmax(p),k2=`${p.l}|${p.I}|${p.W}`;if(k2!==key){key=k2;trail=[];}
+  const ci=cur(p);trail.push([p.V,ci]);if(trail.length>3000)trail.shift();
+  const fq=3000/p.l;$('ph-f').textContent=f(fq,2)+'×10¹⁴ Hz';$('ph-E').textContent=f(HC/p.l,2)+' eV';$('ph-i').textContent=f(ci,2)+' μA';
+  $('ph-K').textContent='? (정지 전압으로 측정)';
+  const st=p.I===0?'0':K<=0?'no':ci===0?'stop':'flow';
+  if(st!==lastState){lastState=st;
+   if(st==='no')setMsg('ph-msg','광자 하나의 에너지가 일함수보다 작아 전자가 나오지 않습니다. 빛의 세기를 높여도 마찬가지입니다!','no');
+   else if(st==='flow')setMsg('ph-msg','광전자가 튀어나와 전류가 흐릅니다. 세기를 바꾸면 무엇이 달라질까요?');
+   else if(st==='stop')setMsg('ph-msg','전자가 나오지만 역방향 전압 때문에 반대편 극판에 닿지 못합니다.');
+   else setMsg('ph-msg','빛을 비추지 않고 있습니다.');}
+  // 광자 생성
+  const G=geo;if(!G)return;acc+=dt*p.I/100*28;
+  while(acc>=1){acc-=1;const ty=G.cy-G.ph/2+Math.random()*G.ph;photons.push({x:G.lampX,y:G.lampY,tx:G.cx+4,ty,u:0});}
+  photons.forEach(o=>{o.u+=dt*2.2;});
+  photons=photons.filter(o=>{if(o.u<1)return true;if(K>0&&Math.random()<0.65){elecs.push({s:0,dir:1,K0:K*Math.random(),y:o.ty});}return false;});
+  const kv=260;elecs.forEach(e=>{const KE=e.K0+p.V*e.s;let v=kv*Math.sqrt(Math.max(KE,0)+0.015);if(KE<=0&&e.dir>0)e.dir=-1;e.s+=e.dir*v*dt/G.gap;});
+  elecs=elecs.filter(e=>{if(e.s>=1){flash=0.12;return false;}return e.s>0;});if(elecs.length>400)elecs.splice(0,elecs.length-400);flash=Math.max(0,flash-dt);}
+ let geo=null;
+ function draw(){const {ctx,w,h}=fit(cv),p=P();const top=h*.56;stageBg(ctx,0,0,w,top);
+  const cx=w*.22,ax=w*.78,cy=top*.5,ph=top*.52;geo={cx,ax,cy,ph,gap:ax-cx-8,lampX:w*.06,lampY:top*.12};
+  // 진공관
+  rrect(ctx,cx-40,cy-ph/2-22,ax-cx+80,ph+44,40);ctx.strokeStyle=STAGE_LINE;ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#b9c4d2';ctx.fillRect(cx-6,cy-ph/2,10,ph);ctx.fillStyle='#8896a8';ctx.fillRect(ax-2,cy-ph/2,8,ph);
+  if(flash>0){ctx.fillStyle='rgba(120,180,255,.5)';ctx.fillRect(ax-4,cy-ph/2,12,ph);}
+  txt(ctx,metName()+' 판',cx,cy+ph/2+16,STAGE_TXT,11,'center');txt(ctx,'반대편 극판',ax,cy+ph/2+16,STAGE_TXT,11,'center');
+  // 전기장 방향 표시
+  if(Math.abs(p.V)>0.01){const n=Math.min(6,Math.ceil(Math.abs(p.V)*1.5));for(let i=0;i<n;i++){const yy=cy-ph/2+ (i+0.5)*ph/n;const L=26;const xm=(cx+ax)/2;
+   ctx.globalAlpha=.25;arrow(ctx,p.V<0?xm-L:xm+L,yy,p.V<0?xm+L:xm-L,yy,'#ffd27a',2);ctx.globalAlpha=1;}}
+  // 램프
+  ctx.fillStyle='#d9e2ee';ctx.beginPath();ctx.arc(geo.lampX,geo.lampY,12,0,7);ctx.fill();
+  if(p.I>0){ctx.fillStyle=wlCol(p.l,0.08+p.I/100*.18);ctx.beginPath();ctx.moveTo(geo.lampX,geo.lampY);ctx.lineTo(cx,cy-ph/2);ctx.lineTo(cx,cy+ph/2);ctx.closePath();ctx.fill();}
+  txt(ctx,p.l<380?`자외선 ${p.l} nm`:`${p.l} nm`,geo.lampX+18,geo.lampY+4,STAGE_TXT,11);
+  photons.forEach(o=>{const x=o.x+(o.tx-o.x)*o.u,y=o.y+(o.ty-o.y)*o.u;ctx.fillStyle=wlCol(p.l,1);ctx.beginPath();ctx.arc(x,y,3.5,0,7);ctx.fill();});
+  elecs.forEach(e=>{const x=cx+6+e.s*(ax-cx-8);ctx.fillStyle='#5fb0ff';ctx.beginPath();ctx.arc(x,e.y,3,0,7);ctx.fill();});
+  // 회로
+  const by=top-14;ctx.strokeStyle=STAGE_LINE;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy+ph/2+22);ctx.lineTo(cx,by);ctx.lineTo(ax,by);ctx.lineTo(ax,cy+ph/2+22);ctx.stroke();
+  const am=(cx+ax)/2+70;ctx.fillStyle=STAGE;ctx.beginPath();ctx.arc(am,by,13,0,7);ctx.fill();ctx.strokeStyle=STAGE_TXT;ctx.stroke();txt(ctx,'A',am,by,STAGE_TXT,12,'center',MONO,'middle');
+  txt(ctx,f(cur(p),2)+' μA',am+20,by-4,'#ffd27a',12,'left',MONO);
+  const bx=(cx+ax)/2-60;ctx.fillStyle=STAGE;ctx.fillRect(bx-10,by-14,20,28);ctx.strokeStyle=STAGE_TXT;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(bx-5,by-12);ctx.lineTo(bx-5,by+12);ctx.moveTo(bx+5,by-6);ctx.lineTo(bx+5,by+6);ctx.stroke();
+  txt(ctx,`V = ${(p.V>0?'+':'')+p.V.toFixed(2)} V`,bx,by-18,'#ffd27a',12,'center',MONO);
+  txt(ctx,p.V<0?'(역방향: 전자를 되돌림)':p.V>0?'(정방향: 전자를 끌어당김)':'',bx,by+26>top?by-32:by-32,STAGE_MUTED,10,'center');
+  // --- 그래프
+  ctx.fillStyle=C('--panel');ctx.fillRect(0,top,w,h-top);
+  const g1={x:44,y:top+26,w:w*.44-54,h:h-top-58},g2={x:w*.5+44,y:top+26,w:w*.5-64,h:h-top-58};
+  const frame=(g,xl,yl)=>{ctx.strokeStyle=C('--line');ctx.lineWidth=1;ctx.strokeRect(g.x,g.y,g.w,g.h);txt(ctx,xl,g.x+g.w,g.y+g.h+28,C('--muted'),11,'right');txt(ctx,yl,g.x,g.y-8,C('--muted'),11,'left');};
+  frame(g1,'전압 V (V)','광전류 (μA)');const VX=V=>g1.x+(V+4)/6*g1.w,IY=I=>g1.y+g1.h-I/IMAX*g1.h;for(let I=0;I<=2;I+=0.5)txt(ctx,I+'',g1.x-6,IY(I)+3,C('--muted'),10,'right',MONO);
+  for(let V=-4;V<=2;V++){txt(ctx,V+'',VX(V),g1.y+g1.h+14,C('--muted'),10,'center',MONO);ctx.strokeStyle=C('--grid');ctx.beginPath();ctx.moveTo(VX(V),g1.y);ctx.lineTo(VX(V),g1.y+g1.h);ctx.stroke();}
+  ctx.strokeStyle=C('--muted');ctx.beginPath();ctx.moveTo(VX(0),g1.y);ctx.lineTo(VX(0),g1.y+g1.h);ctx.stroke();
+  ctx.fillStyle=C('--accent');trail.forEach(([V,I])=>{ctx.fillRect(VX(V)-1.5,IY(I)-1.5,3,3);});
+  ctx.fillStyle=C('--force');ctx.beginPath();ctx.arc(VX(p.V),IY(cur(p)),5,0,7);ctx.fill();
+  txt(ctx,'전압을 움직이면 점이 그려집니다',g1.x+6,g1.y+14,C('--muted'),10);
+  frame(g2,'진동수 f (×10¹⁴ Hz)','최대 운동 에너지 eV₀ (eV)');const FX=q=>g2.x+(q-4)/11*g2.w,KY=K=>g2.y+g2.h-K/4*g2.h;
+  for(let q=4;q<=15;q+=1){ctx.strokeStyle=C('--grid');ctx.beginPath();ctx.moveTo(FX(q),g2.y);ctx.lineTo(FX(q),g2.y+g2.h);ctx.stroke();if(q%2===0)txt(ctx,q+'',FX(q),g2.y+g2.h+14,C('--muted'),10,'center',MONO);}
+  for(let K=0;K<=4;K++)txt(ctx,K+'',g2.x-6,KY(K)+3,C('--muted'),10,'right',MONO);
+  const cols={'2.14':'--accent','2.36':'--force','2.87':'--good','4.33':'--mass','x':'--bad'};
+  const groups={};pts.forEach(o=>{(groups[o.met]=groups[o.met]||[]).push(o);});
+  let ly=g2.y+14;
+  Object.entries(groups).forEach(([m,a])=>{const c=C(cols[m]);a.forEach(o=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(FX(o.fq),KY(o.K),4.5,0,7);ctx.fill();});
+   if(a.length>=2){const n=a.length,sx=a.reduce((s,o)=>s+o.fq,0),sy=a.reduce((s,o)=>s+o.K,0),sxx=a.reduce((s,o)=>s+o.fq*o.fq,0),sxy=a.reduce((s,o)=>s+o.fq*o.K,0);
+    const den=n*sxx-sx*sx;if(Math.abs(den)>1e-6){const m1=(n*sxy-sx*sy)/den,b1=(sy-m1*sx)/n,f0=-b1/m1;
+     ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(FX(Math.max(4,f0)),KY(m1*Math.max(4,f0)+b1));ctx.lineTo(FX(15),KY(m1*15+b1));ctx.stroke();ctx.setLineDash([]);
+     const hJ=m1*1.602e-19/1e14;txt(ctx,`기울기 → h ≈ ${sci(hJ,2)} J·s, f₀ ≈ ${f(f0,2)}×10¹⁴ Hz`,g2.x+6,ly,c,10);ly+=14;}}});
+  if(!pts.length)txt(ctx,'정지 전압을 기록하면 점이 찍힙니다',g2.x+6,g2.y+14,C('--muted'),10);
+ }
+ sims.photo={update,draw};
+})();
+
+/* ---------- 05 물질파 ---------- */
+(()=>{const cv=$('c-matter');let hits=[],run=false,acc=0,flights=[],obs=false,layer=document.createElement('canvas'),lw=0,lh=0,bins=new Array(120).fill(0),key='',geo=null,shown=0;
+ bindOut('mt-V',v=>v+' V');bindOut('mt-L',v=>v+' nm');bindOut('mt-r',v=>v+' 개/s');
+ const part=()=>$('mt-p').value;
+ const lam=()=>part()==='e'?1.226/Math.sqrt(+$('mt-V').value):+$('mt-L').value;
+ const spacing=()=>part()==='e'?36*lam()/0.1226:36*lam()/550;
+ function setP(){const e=part()==='e';showRow('mt-V',e);showRow('mt-L',!e);clear();}
+ $('mt-p').addEventListener('change',setP);
+ function clear(){hits=[];bins.fill(0);flights=[];lw=0;shown=0;setMsg('mt-msg','‘1개 쏘기’를 몇 번 눌러 보세요. 하나의 입자는 어디에 도착할지 예측할 수 있을까요?');}
+ ['mt-V','mt-L'].forEach(id=>$(id).addEventListener('input',clear));
+ $('mt-clr').onclick=clear;
+ $('mt-go').onclick=()=>{run=!run;$('mt-go').textContent=run?'정지':'발사';};
+ $('mt-one').onclick=()=>{flights.push({u:0});};
+ $('mt-obs').onclick=()=>{obs=!obs;$('mt-obs').textContent=obs?'슬릿 관측 켬':'슬릿 관측 끔';$('mt-obs').classList.toggle('on',obs);clear();
+  if(obs)setMsg('mt-msg','검출기로 입자가 어느 슬릿을 지나는지 확인하면서 쏩니다. 무늬가 어떻게 될까요?');};
+ function sample(H){const D=spacing(),a=4*D;for(let i=0;i<500;i++){const y=(Math.random()*2-1)*H;const be=Math.PI*y/a;const env=Math.abs(be)<1e-9?1:(Math.sin(be)/be)**2;const P=obs?env:env*Math.cos(Math.PI*y/D)**2;if(Math.random()<P)return y;}return 0;}
+ function addHit(){if(!geo)return;const y=sample(geo.H);const xr=Math.random();hits.push([xr,y]);if(hits.length>40000)hits.shift();
+  const bi=Math.floor((y+geo.H)/(2*geo.H)*bins.length);if(bi>=0&&bi<bins.length)bins[bi]++;paint(xr,y);}
+ function paint(xr,y){if(!lw)return;const c=layer.getContext('2d');c.fillStyle=part()==='e'?'rgba(120,190,255,.85)':wlCol(lam(),.9);c.fillRect(xr*(lw-2),lh/2+y-0.8,1.8,1.8);}
+ function rebuild(){layer.width=lw;layer.height=lh;const c=layer.getContext('2d');c.clearRect(0,0,lw,lh);hits.forEach(([x,y])=>paint(x,y));}
+ function update(dt){const e=part()==='e',l=lam();$('mt-N').textContent=hits.length;
+  if(e){const V=+$('mt-V').value,v=5.93e5*Math.sqrt(V),p=6.63e-34/(l*1e-9);$('mt-v').textContent=sci(v)+' m/s';$('mt-pp').textContent=sci(p)+' kg·m/s';$('mt-l').textContent=f(l,4)+' nm';}
+  else{$('mt-v').textContent='3.00×10⁸ m/s';$('mt-pp').textContent=sci(6.63e-34/(l*1e-9))+' kg·m/s';$('mt-l').textContent=l+' nm';}
+  if(run){const r=+$('mt-r').value;acc+=r*dt;if(r<=12){while(acc>=1){acc-=1;flights.push({u:0});}}else{while(acc>=1){acc-=1;addHit();}}}
+  flights.forEach(o=>o.u+=dt*1.6);const done=flights.filter(o=>o.u>=1).length;flights=flights.filter(o=>o.u<1);for(let i=0;i<done;i++)addHit();
+  const N=hits.length;if(N!==shown){
+   if(N>=1&&shown<1)setMsg('mt-msg','하나의 입자는 스크린의 한 점에 알갱이처럼 도착합니다. 어디에 도착할지는 미리 알 수 없습니다.');
+   if(N>=30&&shown<30)setMsg('mt-msg','점이 아무 데나 찍히는 것 같나요? ‘발사’로 많이 쏘아 보세요.');
+   if(N>=1500&&shown<1500)setMsg('mt-msg',obs?'어느 슬릿을 지나는지 관측하자 간섭무늬가 사라지고 넓게 퍼진 한 덩어리만 남았습니다.':`많이 쌓이자 줄무늬(간섭무늬)가 드러났습니다. ${e?'전자':'광자'} 하나하나가 파동처럼 두 슬릿을 함께 지나 간섭한 결과입니다.`,'ok');
+   shown=N;}}
+ function draw(){const {ctx,w,h}=fit(cv),e=part()==='e';stageBg(ctx,0,0,w,h);
+  const gx=w*.06,bx=w*.34,sx0=w*.6,sx1=w*.7,cy=h*.5,H=h*.44,D=spacing(),dv=D*0;geo={H};
+  const sw=Math.round(sx1-sx0),sh=Math.round(2*H);if(sw!==lw||sh!==lh){lw=sw;lh=sh;rebuild();}
+  // 전자총
+  rrect(ctx,gx-18,cy-14,44,28,6);ctx.fillStyle='#3a4a62';ctx.fill();txt(ctx,e?'전자총':'광원',gx+4,cy+30,STAGE_TXT,11,'center');
+  // 슬릿
+  const sd=22;ctx.fillStyle='#d9e2ee';ctx.fillRect(bx-3,cy-H,6,H-sd-3);ctx.fillRect(bx-3,cy-sd+3,6,2*sd-6);ctx.fillRect(bx-3,cy+sd,6,H-sd);
+  if(obs){[cy-sd,cy+sd].forEach(y=>{ctx.fillStyle='#ffd27a';ctx.beginPath();ctx.arc(bx+12,y,5,0,7);ctx.fill();});txt(ctx,'검출기',bx+20,cy-sd-8,'#ffd27a',11);}
+  // 비행
+  flights.forEach(o=>{if(o.u<.55){const u=o.u/.55,x=gx+26+(bx-gx-26)*u;ctx.fillStyle=e?'#78beff':wlCol(lam());ctx.beginPath();ctx.arc(x,cy,3.5,0,7);ctx.fill();}
+   else{const u=(o.u-.55)/.45,r=u*(sx0-bx);ctx.strokeStyle=e?`rgba(120,190,255,${.6*(1-u)})`:wlCol(lam(),.6*(1-u));ctx.lineWidth=1.5;
+    (obs?[Math.random()<.5?cy-sd:cy+sd]:[cy-sd,cy+sd]).forEach(y=>{ctx.beginPath();ctx.arc(bx,y,r,-1,1);ctx.stroke();});}});
+  // 스크린
+  ctx.fillStyle='#141d2b';ctx.fillRect(sx0,cy-H,sx1-sx0,2*H);ctx.drawImage(layer,sx0,cy-H);ctx.strokeStyle=STAGE_LINE;ctx.strokeRect(sx0,cy-H,sx1-sx0,2*H);
+  txt(ctx,'스크린',(sx0+sx1)/2,cy+H+16,STAGE_TXT,11,'center');
+  // 히스토그램
+  const hx=sx1+12,hw=w-hx-14,mx=Math.max(5,...bins),bh=2*H/bins.length;
+  ctx.fillStyle=e?'rgba(120,190,255,.75)':wlCol(lam(),.75);bins.forEach((b,i)=>{ctx.fillRect(hx,cy-H+i*bh,b/mx*hw,Math.max(1,bh-0.5));});
+  ctx.strokeStyle=STAGE_LINE;ctx.beginPath();ctx.moveTo(hx,cy-H);ctx.lineTo(hx,cy+H);ctx.stroke();txt(ctx,'도착 개수',hx+hw,cy+H+16,STAGE_TXT,11,'right');
+  txt(ctx,`λ = ${e?f(lam(),4):lam()} nm`,12,20,STAGE_TXT,12,'left',MONO);
+ }
+ sims.matter={update,draw,setP};
+})();
+
+/* ---------- 06 에너지 준위와 스펙트럼 ---------- */
+(()=>{const cv=$('c-atom');const E=n=>-13.6/(n*n),NMAX=6;let n=1,anim=null,photon=null,lines={},geo=null,ion=false,decayT=0,tubeOn=false,tubeAcc=0,last=null;
+ bindOut('at-E',v=>v.toFixed(2)+' eV');
+ const mode=()=>$('at-mode').value;
+ const SER={1:'라이먼',2:'발머',3:'파셴',4:'브래킷',5:'푼트'};
+ const region=l=>l<380?'자외선':l<=750?'가시광선':'적외선';
+ function setMode(){const m=mode();showRow('at-E',m==='shoot');$('at-go').hidden=m==='click';$('at-go').textContent=m==='tube'?(tubeOn?'방전 정지':'방전 시작'):'광자 쏘기';
+  setMsg('at-msg',m==='click'?'에너지 준위를 클릭해 전자를 옮겨 보세요.':m==='shoot'?'광자의 에너지를 정하고 쏘아 보세요. 들뜬 전자는 곧 아래 준위로 떨어집니다.':'방전관의 수많은 수소 원자가 빛을 냅니다. 스펙트럼을 관찰하세요.');}
+ $('at-mode').addEventListener('change',()=>{tubeOn=false;setMode();});
+ $('at-gnd').onclick=()=>{n=1;ion=false;anim=null;photon=null;$('at-n').textContent='n = 1';};
+ $('at-clr').onclick=()=>{lines={};};
+ function emit(ni,nf,rec=true){const dE=E(ni)-E(nf),l=HC/dE;const k=ni+'-'+nf;lines[k]=(lines[k]||0)+1;last={ni,nf,dE,l,em:true};
+  if(rec)addRow('at-tb',[`${ni} → ${nf} (방출)`,f(dE,2),f(l,0),SER[nf]||'',region(l)]);}
+ function jump(to,how){if(anim||ion)return;const from=n;anim={from,to,u:0};
+  if(to<from){emit(from,to);photon={dir:1,u:0,l:HC/(E(from)-E(to))};}
+  else{const dE=E(to)-E(from),l=HC/dE;last={ni:from,nf:to,dE,l,em:false};if(how!=='quiet')addRow('at-tb',[`${from} → ${to} (흡수)`,f(dE,2),f(l,0),'',region(l)]);}
+  n=to;decayT=1.2;}
+ cv.addEventListener('pointerdown',e=>{if(!geo||mode()==='tube')return;const [mx,my]=XYof(cv,e);if(mx>geo.x1+20)return;
+  let best=null,bd=1e9;for(let k=1;k<=NMAX;k++){const d=Math.abs(my-geo.Y(E(k)));if(d<bd){bd=d;best=k;}}if(bd>14||best===n||ion)return;
+  if(best>n&&mode()==='shoot'){setMsg('at-msg','이 방식에서는 광자를 흡수해야만 위로 올라갈 수 있습니다. 광자를 쏘아 보세요.','no');return;}
+  if(best>n){photon={dir:-1,u:0,l:HC/(E(best)-E(n)),then:best};setMsg('at-msg',`${n} → ${best}: 두 준위의 에너지 차 ${f(E(best)-E(n),2)} eV만큼의 광자를 흡수해야 올라갑니다.`);}
+  else{jump(best);setMsg('at-msg',`전자가 아래 준위로 떨어지며 ${f(last.dE,2)} eV (${f(last.l,0)} nm, ${region(last.l)}) 광자를 냈습니다.`,'ok');}});
+ $('at-go').onclick=()=>{if(mode()==='tube'){tubeOn=!tubeOn;setMode();return;}
+  if(ion){setMsg('at-msg','전자가 원자를 떠났습니다(이온화). ‘바닥 상태로’를 누르세요.','no');return;}
+  if(anim||photon)return;const Ep=+$('at-E').value;photon={dir:-1,u:0,l:HC/Ep,shot:Ep};};
+ function arrive(){const o=photon;photon=null;
+  if(o.then){jump(o.then);return;}
+  if(o.shot){const Ep=o.shot;if(Ep>=-E(n)-0.005){ion=true;$('at-n').textContent='n = ∞ (이온화)';last={ni:n,nf:'∞',dE:Ep,l:HC/Ep,em:false};setMsg('at-msg',`광자 에너지(${f(Ep,2)} eV)가 전자를 떼어 내기에 충분하여 원자가 이온화되었습니다.`,'ok');return;}
+   for(let k=n+1;k<=NMAX;k++){if(Math.abs(E(k)-E(n)-Ep)<0.02){jump(k);setMsg('at-msg',`흡수! ${f(Ep,2)} eV는 n = ${last.ni} → ${k}의 에너지 차와 같습니다.`,'ok');return;}}
+   setMsg('at-msg',`${f(Ep,2)} eV는 어떤 두 준위의 에너지 차와도 맞지 않아 흡수되지 않고 지나갔습니다.`,'no');photon={dir:-1,u:1,l:o.l,pass:true};}}
+ function update(dt){if(anim){anim.u+=dt*3;if(anim.u>=1)anim=null;}
+  if(photon){photon.u+=dt*1.4;if(photon.dir<0&&!photon.pass&&photon.u>=1)arrive();else if(photon.u>=(photon.pass?2:1))photon=null;}
+  if(mode()==='shoot'&&!anim&&!photon&&!ion&&n>1){decayT-=dt;if(decayT<=0){const to=1+Math.floor(Math.random()*(n-1));jump(to);setMsg('at-msg',`들뜬 전자가 스스로 n = ${to}로 떨어지며 ${f(last.l,0)} nm 빛을 냈습니다.`);}}
+  if(mode()==='tube'&&tubeOn){tubeAcc+=dt*14;while(tubeAcc>=1){tubeAcc-=1;const ni=2+Math.floor(Math.random()*(NMAX-1)),nf=1+Math.floor(Math.random()*(ni-1));emit(ni,nf,false);}
+   if(!anim){const ni=2+Math.floor(Math.random()*(NMAX-1));n=ni;anim={from:1,to:ni,u:0};setTimeout(()=>{},0);}}
+  $('at-n').textContent=ion?'n = ∞ (이온화)':'n = '+n;
+  if(last){$('at-tr').textContent=`${last.ni} → ${last.nf} (${last.em?'방출':'흡수'})`;$('at-pe').textContent=f(last.dE,2)+' eV';$('at-pl').textContent=`${f(last.l,0)} nm (${region(last.l)})`;}}
+ function draw(){const {ctx,w,h}=fit(cv);stageBg(ctx,0,0,w,h);
+  const top=34,bot=h*.6,x0=70,x1=w*.5,lo=Math.log(0.2),Y=e=>e>-0.2?top-12:top+(Math.log(-e)-lo)/(Math.log(13.6)-lo)*(bot-top);geo={Y,x1};
+  txt(ctx,'에너지 (eV)',10,16,STAGE_MUTED,11);txt(ctx,'※ 세로 눈금은 로그 눈금(간격 일정하지 않음)',x1,16,STAGE_MUTED,10,'right');
+  ctx.strokeStyle=STAGE_LINE;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x0,Y(0));ctx.lineTo(x1,Y(0));ctx.stroke();ctx.setLineDash([]);txt(ctx,'0 (n = ∞)',x0-6,Y(0)+4,STAGE_MUTED,10,'right',MONO);
+  for(let k=1;k<=NMAX;k++){const y=Y(E(k));ctx.strokeStyle=k===n&&!ion?'#ffd27a':STAGE_TXT;ctx.lineWidth=k===n?3:1.6;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
+   txt(ctx,f(E(k),2),x0-6,y+4,STAGE_MUTED,10,'right',MONO);txt(ctx,'n='+k,x1+6,y+4,STAGE_TXT,11,'left',MONO);}
+  // 전자
+  const ex=(x0+x1)/2;let ey;if(ion)ey=Y(0)-10;else if(anim){const a=Y(E(anim.from)),b=Y(E(anim.to));ey=a+(b-a)*Math.min(1,anim.u);
+   ctx.globalAlpha=.6;arrow(ctx,ex+22,a,ex+22,b,anim.to<anim.from?'#ffd27a':'#7fd0ff',2);ctx.globalAlpha=1;}else ey=Y(E(n));
+  ctx.fillStyle='#5fb0ff';ctx.beginPath();ctx.arc(ex,ey,6,0,7);ctx.fill();
+  // 광자
+  if(photon){const L=w*.42,base=photon.dir>0?ex+30:ex-30;const u=Math.min(photon.u,2);let px;
+   if(photon.dir>0)px=base+u*L;else px=u<=1?(x0-10)+u*(ex-30-(x0-10)):ex-30+(u-1)*L;
+   const py=ey,col=wlCol(photon.l);ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<=40;i++){const xx=px-20+i;const yy=py+6*Math.sin(i/40*Math.PI*6);i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.stroke();
+   txt(ctx,`${f(HC/photon.l,2)} eV`,px,py-12,col,11,'center',MONO);}
+  // 스펙트럼
+  const sy=h*.66,sx0=24,sx1=w-24,lmin=90,lmax=2000,LX=l=>sx0+(Math.log(l)-Math.log(lmin))/(Math.log(lmax)-Math.log(lmin))*(sx1-sx0);
+  txt(ctx,'전체 영역 (로그 눈금)',sx0,sy-8,STAGE_MUTED,11);
+  ctx.fillStyle='rgba(160,130,255,.12)';ctx.fillRect(LX(lmin),sy,LX(380)-LX(lmin),26);ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(LX(380),sy,LX(750)-LX(380),26);ctx.fillStyle='rgba(150,40,40,.18)';ctx.fillRect(LX(750),sy,LX(lmax)-LX(750),26);
+  txt(ctx,'자외선',(LX(lmin)+LX(380))/2,sy+17,STAGE_MUTED,10,'center');txt(ctx,'가시광선',(LX(380)+LX(750))/2,sy+17,STAGE_MUTED,10,'center');txt(ctx,'적외선',(LX(750)+LX(lmax))/2,sy+17,STAGE_MUTED,10,'center');
+  [100,200,500,1000].forEach(l=>txt(ctx,l+'',LX(l),sy+38,STAGE_MUTED,9,'center',MONO));txt(ctx,'2000 nm',sx1,sy+38,STAGE_MUTED,9,'right',MONO);
+  const vy=sy+64,vx0=sx0,vx1=sx1,VX=l=>vx0+(l-380)/(750-380)*(vx1-vx0),vh=h-vy-22;
+  txt(ctx,'가시광선 영역 확대 (분광기로 본 모습)',vx0,vy-4,STAGE_MUTED,11);
+  for(let x=vx0;x<vx1;x+=2){const l=380+(x-vx0)/(vx1-vx0)*370;ctx.fillStyle=wlCol(l,.1);ctx.fillRect(x,vy,2,vh);}
+  Object.entries(lines).forEach(([k,c])=>{const [ni,nf]=k.split('-').map(Number),l=HC/(E(ni)-E(nf)),a=Math.min(1,.45+c*.08);
+   ctx.fillStyle=wlCol(l,a);if(l>=lmin&&l<=lmax)ctx.fillRect(LX(l)-1.5,sy,3,26);
+   if(l>=380&&l<=750){ctx.fillRect(VX(l)-2,vy,4,vh);txt(ctx,f(l,0),VX(l)+4,vy+12,STAGE_TXT,10,'left',MONO);}});
+  for(let l=400;l<=700;l+=50)txt(ctx,l+'',VX(l),vy+vh+12,STAGE_MUTED,9,'center',MONO);txt(ctx,'nm',vx1,vy+vh+12,STAGE_MUTED,9,'right',MONO);
+ }
+ setMode();sims.atom={update,draw};
+})();
+
+/* ---------- 루프 ---------- */
+try{const t=localStorage.getItem('lml-tab');if(t)document.querySelector(`#tabs button[data-t="${t}"]`)?.click();}catch(e){}
+let last=performance.now();
+function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;const s=sims[active];if(s){s.update(dt);s.draw();}requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+/* ---------- 슬라이더 값 직접 입력 ---------- */
+(function(){
+ const items=[];
+ document.querySelectorAll('input[type=range]').forEach(r=>{
+  const o=document.getElementById(r.id+'o');if(!o)return;
+  const st0=r.getAttribute('step')||'1',stN=+st0,isInt=Number.isInteger(stN);
+  const dec=isInt?0:Math.min(3,(st0.split('.')[1]||'').length+1);
+  const box=document.createElement('span');box.className='nv';
+  const n=document.createElement('input');n.type='number';n.min=r.min;n.max=r.max;n.step='any';n.inputMode='decimal';
+  n.setAttribute('aria-label',(document.querySelector('label[for="'+r.id+'"]')||{}).textContent||r.id);
+  n.title=`${r.min} ~ ${r.max} 범위에서 입력`;
+  const u=document.createElement('span');u.className='nu';
+  box.append(n,u);o.after(box);o.hidden=true;
+  const it={r,o,n,u,last:null,lastO:null};items.push(it);
+  const restore=()=>{if(r.step!==st0){r.step=st0;}};
+  r.addEventListener('pointerdown',restore);r.addEventListener('keydown',restore);
+  const commit=()=>{let v=parseFloat(String(n.value).replace(',','.'));
+   if(!isFinite(v)){sync(it,true);return;}
+   const lo=+r.min,hi=+r.max;let out=false;if(v<lo){v=lo;out=true;}if(v>hi){v=hi;out=true;}
+   v=+v.toFixed(dec);
+   r.step='any';r.value=v;
+   r.dispatchEvent(new Event('input',{bubbles:true}));r.dispatchEvent(new Event('change',{bubbles:true}));
+   sync(it,true);
+   if(out){n.classList.add('clamp');setTimeout(()=>n.classList.remove('clamp'),700);}};
+  n.addEventListener('change',commit);
+  n.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();n.select();}});
+  n.addEventListener('focus',()=>n.select());
+  sync(it,true);
+ });
+ function sync(it,force){const {r,o,n,u}=it;
+  if(force||r.value!==it.last){it.last=r.value;if(document.activeElement!==n||force)n.value=+(+r.value).toFixed(dec(r));}
+  if(o.textContent!==it.lastO){it.lastO=o.textContent;const m=o.textContent.match(/^\s*[−\-+]?[\d.,]+\s*(.*)$/);u.textContent=m?m[1]:'';}}
+ function dec(r){const s=r.getAttribute('step');if(s==='any')return 3;const p=(s||'1').split('.')[1];return p?Math.min(3,p.length+1):0;}
+ (function loop(){items.forEach(it=>sync(it,false));requestAnimationFrame(loop);})();
+})();
+showRow('mt-L',false);showRow('at-E',$('at-mode').value==='shoot');
+</script>
+
+</body>
+</html>
