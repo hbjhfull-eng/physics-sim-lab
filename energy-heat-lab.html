@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>에너지와 열 실험실</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: 상단 단원 헤더 + 번호 탭(교과서 차시 순서) → 각 탭은 [실험 무대 | 조작·측정 패널] 2단, 좁으면 1단 */
+:root{
+  --paper:#f3f6fa; --panel:#ffffff; --ink:#142030; --muted:#5b6b7e; --line:#d3dce7; --grid:#e4ebf3;
+  --accent:#1d5bd0; --accent-soft:#e2ebfb; --force:#df6416; --good:#178457; --bad:#c42f3a; --mass:#6b4fc8;
+  --f-display:"Do Hyeon","IBM Plex Sans KR",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0d131a; --panel:#141c26; --ink:#e2eaf3; --muted:#8fa1b4; --line:#273443; --grid:#1a2430;
+  --accent:#6f9fff; --accent-soft:#1a2a45; --force:#ff9548; --good:#4cc48b; --bad:#ff6a70; --mass:#a98cff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0d131a; --panel:#141c26; --ink:#e2eaf3; --muted:#8fa1b4; --line:#273443; --grid:#1a2430;
+  --accent:#6f9fff; --accent-soft:#1a2a45; --force:#ff9548; --good:#4cc48b; --bad:#ff6a70; --mass:#a98cff; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+header h1{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,5vw,44px);line-height:1.05;margin:0;letter-spacing:.01em}
+header .unit{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+header p{margin:0;color:var(--muted);max-width:52ch}
+nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+nav button{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 14px var(--f-body);
+  padding:8px 14px;border-radius:999px;cursor:pointer;display:flex;gap:8px;align-items:center}
+nav button b{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-weight:600}
+nav button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+nav button[aria-selected="true"] b{color:var(--paper)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sim{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.sim{grid-template-columns:1fr}}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.stage canvas{display:block;width:100%;touch-action:manipulation}
+.stage .cap{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.box h3{margin:0;font-size:13px;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.concept{background:var(--accent-soft);border-color:transparent}
+.concept p{margin:0}
+.formula{font-family:var(--f-mono);font-size:15px;font-weight:600;color:var(--accent)}
+.ctl{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px 10px}
+.ctl label{font-size:14px;white-space:nowrap}
+.ctl output{font-family:var(--f-mono);font-size:13px;min-width:74px;text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent);min-width:0}
+select{font:14px var(--f-body);padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);grid-column:2 / 4}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:500 14px var(--f-body);padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.on{background:var(--force);border-color:var(--force);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.read{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.read span:nth-child(even){font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.read .em{font-weight:700;color:var(--ink)}
+.msg{font-size:14px;padding:8px 10px;border-radius:6px;background:var(--grid);min-height:2.4em}
+.msg.ok{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good);font-weight:700}
+.msg.no{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad);font-weight:700}
+ol.task{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:right;white-space:nowrap}
+th{color:var(--muted);font-weight:500}
+td:first-child,th:first-child{text-align:left}
+.pred{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+.pred input{width:80px;font:14px var(--f-mono);padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+.legend{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+footer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <div class="unit">2022 개정 물리학 · Ⅰ. 힘과 에너지 · 2. 에너지와 열</div>
+    <h1>에너지와 열 실험실</h1>
+  </div>
+  <p>결과를 먼저 예측하고, 직접 조작해서 확인하세요. 에너지 막대의 합이 어떻게 변하는지 끝까지 지켜봅니다.</p>
+</header>
+
+<nav role="tablist" id="tabs">
+  <button role="tab" data-t="work" aria-selected="true"><b>01</b>일과 운동 에너지</button>
+  <button role="tab" data-t="pot"><b>02</b>위치 에너지</button>
+  <button role="tab" data-t="track"><b>03</b>역학적 에너지 보존</button>
+  <button role="tab" data-t="phase"><b>04</b>열과 상태 변화</button>
+  <button role="tab" data-t="eff"><b>05</b>에너지 효율</button>
+  <button role="tab" data-t="perp"><b>06</b>영구 기관</button>
+</nav>
+
+<!-- 01 일·운동 에너지 정리 -->
+<section class="sim" id="p-work">
+  <div class="stage"><canvas id="c-work" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span class="legend"><i style="background:var(--force)"></i>힘이 작용하는 구간</span><span class="legend"><i style="background:var(--accent)"></i>운동 에너지</span><span>아래: 힘-이동 거리 그래프(넓이 = 일)</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>알짜힘이 물체에 한 일만큼 물체의 운동 에너지가 변합니다(일·운동 에너지 정리).</p><div class="formula">W = Fs = ½mv² − ½mv₀²</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="wk-m">질량 m</label><input type="range" id="wk-m" min="0.5" max="5" step="0.5" value="1"><output id="wk-mo"></output>
+        <label for="wk-F">알짜힘 F</label><input type="range" id="wk-F" min="-10" max="20" step="1" value="8"><output id="wk-Fo"></output>
+        <label for="wk-s">힘 구간 s</label><input type="range" id="wk-s" min="0.5" max="3" step="0.25" value="1"><output id="wk-so"></output>
+        <label for="wk-v">처음 속도 v₀</label><input type="range" id="wk-v" min="0" max="6" step="0.5" value="2"><output id="wk-vo"></output>
+      </div>
+      <div class="pred"><label for="wk-guess">예측: 구간을 지난 뒤 속력</label><input id="wk-guess" type="number" step="0.1" placeholder="m/s"></div>
+      <div class="row"><button class="btn primary" id="wk-run">출발</button><button class="btn" id="wk-reset">처음으로</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>힘이 한 일 W</span><span id="wk-W">–</span>
+      <span>처음 운동 에너지</span><span id="wk-E0">–</span>
+      <span class="em">지금 운동 에너지</span><span class="em" id="wk-E">–</span>
+      <span>지금 속력</span><span id="wk-vv">–</span></div>
+      <div class="msg" id="wk-msg">예측을 적고 ‘출발’을 누르세요.</div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>2 m/s로 운동하는 1 kg 물체에 운동 방향으로 힘을 0.5 m 동안 작용했더니 4 m/s가 되었다. 힘의 크기를 구하고 확인하자.</li>
+      <li>F를 음(−)으로 하면 운동 에너지는 어떻게 되는가? 이때 힘이 한 일의 부호를 설명하자.</li>
+      <li>같은 일을 해도 질량이 크면 나중 속력이 어떻게 달라지는가?</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>m</th><th>F</th><th>s</th><th>W(J)</th><th>ΔEk(J)</th><th>v(m/s)</th></tr></thead><tbody id="wk-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- 02 위치 에너지 -->
+<section class="sim" id="p-pot" hidden>
+  <div class="stage"><canvas id="c-pot" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span>물체를 잡고 끌어 올리거나(중력) 끌어당기세요(탄성력). 오른쪽 그래프의 넓이가 저장된 위치 에너지입니다.</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>중력이나 탄성력에 대해 한 일은 위치 에너지로 저장됩니다. 놓으면 위치 에너지가 운동 에너지로 바뀝니다.</p><div class="formula">Ep = mgh,   Ep = ½kx²</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="pt-mode">종류</label><select id="pt-mode"><option value="g">중력에 의한 위치 에너지</option><option value="k">탄성력에 의한 위치 에너지</option></select>
+        <label for="pt-m">질량 m</label><input type="range" id="pt-m" min="0.5" max="5" step="0.5" value="1"><output id="pt-mo"></output>
+        <label for="pt-k">용수철 상수 k</label><input type="range" id="pt-k" min="20" max="200" step="10" value="100"><output id="pt-ko"></output>
+        <label for="pt-x" id="pt-xl">높이 h</label><input type="range" id="pt-x" min="0" max="2" step="0.01" value="0"><output id="pt-xo"></output>
+      </div>
+      <div class="row"><button class="btn primary" id="pt-go">놓기</button><button class="btn" id="pt-reset">처음으로</button><button class="btn" id="pt-rec">기록</button></div></div>
+    <div class="box"><h3>측정 (g = 9.8 m/s²)</h3><div class="read">
+      <span>내가 작용한 힘</span><span id="pt-F">–</span>
+      <span class="em">위치 에너지 Ep</span><span class="em" id="pt-Ep">–</span>
+      <span>운동 에너지 Ek</span><span id="pt-Ek">–</span>
+      <span>역학적 에너지</span><span id="pt-E">–</span></div>
+      <div class="msg" id="pt-msg">물체를 잡고 끌어 보세요.</div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>높이를 2배로 하면 Ep는 몇 배인가? 용수철을 2배로 늘이면 Ep는 몇 배인가? 차이가 생기는 까닭을 그래프 넓이로 설명하자.</li>
+      <li>놓은 뒤 Ep와 Ek가 바뀌는 동안 두 값의 합은 어떻게 되는가?</li>
+      <li>B에 매단 물체가 x₀ 늘어났고 C는 x만큼 늘어나 Ep가 4배였다. x는 x₀의 몇 배인가?</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>종류</th><th>m 또는 k</th><th>h 또는 x(m)</th><th>Ep(J)</th></tr></thead><tbody id="pt-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- 03 역학적 에너지 보존 -->
+<section class="sim" id="p-track" hidden>
+  <div class="stage"><canvas id="c-track" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span class="legend"><i style="background:var(--accent)"></i>운동 에너지</span><span class="legend"><i style="background:var(--good)"></i>위치 에너지</span><span class="legend"><i style="background:var(--bad)"></i>열에너지</span><span>멈춘 상태에서 공을 잡고 레일 위 출발 위치로 옮기세요.</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>마찰이 없으면 운동 에너지와 위치 에너지의 합인 역학적 에너지가 보존됩니다. 마찰이 있으면 역학적 에너지 일부가 열에너지로 바뀌지만, 열에너지까지 더한 총에너지는 보존됩니다.</p><div class="formula">mgh₁ + ½mv₁² = mgh₂ + ½mv₂² (+ 열)</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="tr-shape">레일</label><select id="tr-shape"><option value="u">U자 그릇</option><option value="coaster">롤러코스터</option><option value="slide">미끄럼틀</option></select>
+        <label for="tr-m">질량 m</label><input type="range" id="tr-m" min="1" max="5" step="1" value="2"><output id="tr-mo"></output>
+        <label for="tr-mu">마찰</label><input type="range" id="tr-mu" min="0" max="0.3" step="0.02" value="0"><output id="tr-muo"></output>
+      </div>
+      <div class="row"><button class="btn primary" id="tr-run">출발</button><button class="btn" id="tr-reset">처음 위치로</button><button class="btn" id="tr-rec">지금 값 기록</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>높이 h</span><span id="tr-h">–</span>
+      <span>속력 v</span><span id="tr-v">–</span>
+      <span>Ek / Ep</span><span id="tr-kp">–</span>
+      <span class="em">역학적 에너지</span><span class="em" id="tr-E">–</span>
+      <span>열에너지</span><span id="tr-Q">–</span>
+      <span class="em">총에너지</span><span class="em" id="tr-T">–</span></div>
+      <div class="msg" id="tr-msg"></div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>마찰 0에서 공이 처음 높이보다 높이 올라갈 수 있는가? 롤러코스터 레일로 확인하자.</li>
+      <li>마찰을 주고 공이 멈출 때까지 기다리자. 줄어든 역학적 에너지와 생긴 열에너지를 비교하자.</li>
+      <li>높은 곳 → 낮은 곳, 낮은 곳 → 높은 곳에서 Ek·Ep·역학적 에너지가 어떻게 변하는지 표로 정리하자.</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>h(m)</th><th>v(m/s)</th><th>Ek</th><th>Ep</th><th>열</th><th>총(J)</th></tr></thead><tbody id="tr-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- 04 열과 상태 변화 -->
+<section class="sim" id="p-phase" hidden>
+  <div class="stage"><canvas id="c-phase" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span>왼쪽: 입자 모형(물 100 g). 오른쪽: 공급한 열에너지에 따른 온도 그래프</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>열은 온도가 높은 곳에서 낮은 곳으로 이동합니다. 상태가 변하는 동안에는 흡수(방출)한 열에너지가 온도를 바꾸지 않고 상태 변화에 쓰입니다.</p><div class="formula">융해 334 J/g,  기화 2260 J/g</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="ph-P">가열기 출력</label><input type="range" id="ph-P" min="100" max="2000" step="100" value="1000"><output id="ph-Po"></output>
+        <label for="ph-sp">재생 속도</label><select id="ph-sp"><option value="5">5배</option><option value="20" selected>20배</option><option value="60">60배</option><option value="200">200배</option></select>
+      </div>
+      <div class="row"><button class="btn primary" id="ph-heat">가열하기</button><button class="btn" id="ph-cool">냉각하기</button><button class="btn" id="ph-stop">멈춤</button><button class="btn" id="ph-reset">처음으로(−20 °C 얼음)</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read">
+      <span>상태</span><span id="ph-st">–</span>
+      <span class="em">온도</span><span class="em" id="ph-T">–</span>
+      <span>공급한 열에너지 합</span><span id="ph-Q">–</span>
+      <span>경과 시간(실제)</span><span id="ph-t">–</span></div>
+      <div class="msg" id="ph-msg"></div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>그래프에서 온도가 일정한 구간 두 곳을 찾고, 이때 공급한 열에너지가 어디에 쓰이는지 설명하자.</li>
+      <li>얼음을 다 녹이는 데 필요한 열과 물을 다 끓여 수증기로 만드는 데 필요한 열을 그래프에서 읽어 비교하자.</li>
+      <li>냉각하기로 수증기를 물로 만들 때 열에너지는 흡수되는가, 방출되는가? 구름이 만들어질 때와 연결하자.</li></ol></div>
+  </div>
+</section>
+
+<!-- 05 에너지 효율 -->
+<section class="sim" id="p-eff" hidden>
+  <div class="stage"><canvas id="c-eff" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span class="legend"><i style="background:var(--bad)"></i>공급한 열에너지</span><span class="legend"><i style="background:var(--accent)"></i>역학적 에너지(일)</span><span class="legend"><i style="background:var(--force)"></i>방출된 열에너지</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>열에너지를 역학적 에너지로 바꾸는 장치는 공급받은 열의 일부를 반드시 주변으로 방출하므로 효율이 1이 될 수 없습니다.</p><div class="formula">e = W / Q공급,  Q공급 = W + Q방출</div></div>
+    <div class="box"><h3>장치</h3>
+      <div class="ctl">
+        <label for="ef-pre">예시</label><select id="ef-pre"><option value="">직접 정하기</option><option value="200,190">스털링 엔진 모형</option><option value="1000,720">자동차 엔진</option><option value="1000,600">화력 발전소</option><option value="300,100">문제의 장치 A (3Q, Q)</option><option value="250,50">문제의 장치 B (2.5Q, 0.5Q)</option></select>
+        <label for="ef-Q1">공급한 열</label><input type="range" id="ef-Q1" min="50" max="1000" step="10" value="500"><output id="ef-Q1o"></output>
+        <label for="ef-Q2">방출된 열</label><input type="range" id="ef-Q2" min="1" max="1000" step="1" value="300"><output id="ef-Q2o"></output>
+        <label for="ef-m">들어 올릴 추</label><input type="range" id="ef-m" min="1" max="20" step="1" value="10"><output id="ef-mo"></output>
+      </div>
+      <div class="pred"><label for="ef-guess">예측: 효율</label><input id="ef-guess" type="number" step="0.01" placeholder="0~1"></div>
+      <div class="row"><button class="btn primary" id="ef-run">작동</button><button class="btn" id="ef-rec">기록</button></div></div>
+    <div class="box"><h3>측정 (g = 9.8 m/s²)</h3><div class="read">
+      <span class="em">얻은 역학적 에너지 W</span><span class="em" id="ef-W">–</span>
+      <span>추가 올라간 높이</span><span id="ef-h">–</span>
+      <span class="em">에너지 효율</span><span class="em" id="ef-e">작동 후 공개</span></div>
+      <div class="msg" id="ef-msg"></div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>스털링 엔진이 80 J을 흡수해 2 kg 추를 0.2 m 들어 올렸다. 효율을 계산하고 장치로 확인하자.</li>
+      <li>방출된 열을 0으로 만들 수 있는가? 슬라이더를 끝까지 내려 보고 그 까닭을 설명하자.</li>
+      <li>장치 A와 B의 효율을 비교하고, 효율을 높이는 것이 왜 중요한지 화석 연료 사용과 연결하자.</li></ol></div>
+    <div class="box"><h3>기록표</h3><div class="tbl"><table><thead><tr><th>#</th><th>Q공급(J)</th><th>Q방출(J)</th><th>W(J)</th><th>효율</th><th>예측</th></tr></thead><tbody id="ef-tb"></tbody></table></div></div>
+  </div>
+</section>
+
+<!-- 06 영구 기관 -->
+<section class="sim" id="p-perp" hidden>
+  <div class="stage"><canvas id="c-perp" style="aspect-ratio:16/11"></canvas>
+    <div class="cap"><span id="pp-cap">바퀴를 잡고 돌려 보세요. 아래 그래프는 회전 각도에 따른 알짜 돌림힘입니다.</span></div></div>
+  <div class="side">
+    <div class="box concept"><h3>핵심 개념</h3><p>에너지를 공급하지 않고 계속 일을 하는 영구 기관은 에너지 보존 법칙에 어긋나므로 만들 수 없습니다.</p><div class="formula">한 바퀴 동안 중력이 한 일 = 0</div></div>
+    <div class="box"><h3>조작</h3>
+      <div class="ctl">
+        <label for="pp-mode">사례</label><select id="pp-mode"><option value="wheel">계속 도는 회전판</option><option value="water">계속 도는 수차</option></select>
+        <label for="pp-fr">마찰</label><input type="range" id="pp-fr" min="0" max="1" step="0.05" value="0.2"><output id="pp-fro"></output>
+      </div>
+      <div class="row"><button class="btn primary" id="pp-spin">힘껏 돌리기</button><button class="btn" id="pp-reset">처음으로</button></div></div>
+    <div class="box"><h3>측정</h3><div class="read" id="pp-read">
+      <span>회전판 각도</span><span id="pp-a">–</span>
+      <span>왼쪽 추들의 돌림힘</span><span id="pp-l">–</span>
+      <span>오른쪽 추들의 돌림힘</span><span id="pp-r">–</span>
+      <span class="em">알짜 돌림힘</span><span class="em" id="pp-n">–</span>
+      <span>회전 운동 에너지</span><span id="pp-k">–</span></div>
+      <div class="msg" id="pp-msg"></div></div>
+    <div class="box"><h3>탐구 과제</h3><ol class="task">
+      <li>회전판: 추가 왼쪽에 더 많은 각도와 오른쪽 추가 멀리 있는 각도를 찾아 두 돌림힘을 비교하자.</li>
+      <li>돌림힘 그래프에서 (+) 넓이와 (−) 넓이를 비교하고, 한 바퀴 동안 한 일이 0인 까닭을 설명하자.</li>
+      <li>수차: 마찰을 0으로 해도 물을 처음보다 높이 끌어 올릴 수 없는 까닭을 에너지 보존으로 논증하자.</li></ol></div>
+  </div>
+</section>
+
+<footer>2022 개정 교육과정 「물리학」 Ⅰ-2 일과 에너지 · 역학적 에너지와 열 · 에너지 효율. g = 9.8 m/s²로 계산합니다.</footer>
+</div>
+
+
+<script>
+const $=id=>document.getElementById(id);
+const C=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MONO='"JetBrains Mono",ui-monospace,monospace', BODY='"IBM Plex Sans KR",system-ui,sans-serif';
+const f=(x,d=2)=>(Math.abs(x)<1e-9?0:x).toFixed(d);
+function fit(cv){const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;
+  if(cv._w!==r.width||cv._h!==r.height||cv._d!==d){cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);cv._w=r.width;cv._h=r.height;cv._d=d;}
+  const ctx=cv.getContext('2d');ctx.setTransform(d,0,0,d,0,0);ctx.clearRect(0,0,r.width,r.height);return {ctx,w:r.width,h:r.height};}
+function arrow(ctx,x1,y1,x2,y2,col,lw=3){const L=Math.hypot(x2-x1,y2-y1);if(L<2)return;const a=Math.atan2(y2-y1,x2-x1),hd=Math.min(12,L*.5);
+  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2-hd*.8*Math.cos(a),y2-hd*.8*Math.sin(a));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-hd*Math.cos(a-.4),y2-hd*Math.sin(a-.4));ctx.lineTo(x2-hd*Math.cos(a+.4),y2-hd*Math.sin(a+.4));ctx.closePath();ctx.fill();}
+function txt(ctx,s,x,y,col,size=13,align='left',font=BODY,base='alphabetic'){ctx.fillStyle=col;ctx.font=`${size}px ${font}`;ctx.textAlign=align;ctx.textBaseline=base;ctx.fillText(s,x,y);}
+function rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h);}
+function addRow(id,cells){const tb=$(id),tr=document.createElement('tr');cells.unshift(tb.children.length+1);tr.innerHTML=cells.map(c=>`<td>${c}</td>`).join('');tb.appendChild(tr);}
+function setMsg(id,s,cls=''){const m=$(id);m.textContent=s;m.className='msg '+cls;}
+function bindOut(id,fmt){const i=$(id),o=$(id+'o');const u=()=>o.textContent=fmt(+i.value);i.addEventListener('input',u);u();}
+/* ---------- 탭 ---------- */
+const sims={};let active='work';
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{
+  active=b.dataset.t;document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('.sim').forEach(s=>s.hidden=s.id!=='p-'+active);
+  try{localStorage.setItem('ehl-tab',active)}catch(e){}
+}));
+try{const t=localStorage.getItem('ehl-tab');if(t)document.querySelector(`#tabs button[data-t="${t}"]`)?.click();}catch(e){}
+const G=9.8;
+// 에너지 막대
+function bars(ctx,x,y,w,h,items,max,title){const n=items.length,gap=10,bw=(w-(n-1)*gap)/n;
+  if(title)txt(ctx,title,x,y-26,C('--ink'),12);
+  items.forEach((it,i)=>{const X=x+i*(bw+gap),v=Math.max(0,it.val),H=Math.min(1,v/max)*h;
+   ctx.fillStyle=C('--grid');ctx.fillRect(X,y,bw,h);ctx.fillStyle=it.col;ctx.fillRect(X,y+h-H,bw,H);
+   if(it.line){ctx.strokeStyle=C('--ink');ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(X-3,y+h-Math.min(1,it.line/max)*h);ctx.lineTo(X+bw+3,y+h-Math.min(1,it.line/max)*h);ctx.stroke();ctx.setLineDash([]);}
+   txt(ctx,f(v,1),X+bw/2,y+h-H-5,C('--ink'),11,'center',MONO);txt(ctx,it.lab,X+bw/2,y+h+15,C('--muted'),11,'center');});
+  txt(ctx,'(J)',x+w,y-8,C('--muted'),10,'right',MONO);}
+
+/* ---------- 01 일과 운동 에너지 ---------- */
+(()=>{const cv=$('c-work');const L=6,z0=1;let x=0,v=0,run=false,done=false,checked=false;
+ bindOut('wk-m',v=>v.toFixed(1)+' kg');bindOut('wk-F',v=>v+' N');bindOut('wk-s',v=>v.toFixed(2)+' m');bindOut('wk-v',v=>v.toFixed(1)+' m/s');
+ const P=()=>({m:+$('wk-m').value,F:+$('wk-F').value,s:+$('wk-s').value,v0:+$('wk-v').value});
+ function reset(){const p=P();x=0;v=p.v0;run=false;done=false;checked=false;$('wk-run').textContent='출발';setMsg('wk-msg','예측을 적고 ‘출발’을 누르세요.');}
+ ['wk-m','wk-F','wk-s','wk-v'].forEach(id=>$(id).addEventListener('input',reset));
+ $('wk-reset').onclick=reset;
+ $('wk-run').onclick=()=>{if(done)reset();if(P().v0===0&&P().F<=0){setMsg('wk-msg','처음 속도가 0이고 힘이 0 이하이면 출발하지 않습니다.','no');return;}run=!run;$('wk-run').textContent=run?'일시정지':'계속';};
+ const Wd=p=>p.F*(Math.min(Math.max(x,z0),z0+p.s)-z0);
+ function finish(p,msg,cls){run=false;done=true;$('wk-run').textContent='다시 출발';
+  const W=Wd(p),dE=.5*p.m*v*v-.5*p.m*p.v0*p.v0;addRow('wk-tb',[p.m,p.F,p.s,f(W,2),f(dE,2),f(v,2)]);setMsg('wk-msg',msg,cls);}
+ function update(dt){const p=P();
+  if(run){for(let i=0;i<20;i++){const h=dt/20,inZ=x>=z0&&x<z0+p.s;const a=inZ?p.F/p.m:0;v+=a*h;
+    if(v<=0){v=0;finish(p,`힘이 한 일 ${f(Wd(p),2)} J만큼 운동 에너지가 줄어 멈췄습니다.`,'no');break;}
+    x+=v*h;if(x>=z0+p.s&&!checked){checked=true;v=Math.sqrt(Math.max(0,p.v0*p.v0+2*p.F*p.s/p.m));const g=$('wk-guess').value;
+     const W=Wd(p);let m=`구간 통과: W = ${f(W,2)} J, 운동 에너지 ${f(.5*p.m*p.v0*p.v0,2)} → ${f(.5*p.m*v*v,2)} J`;
+     if(g!==''){const ok=Math.abs(+g-v)<0.05;m=(ok?'예측 적중! ':`예측 ${g} m/s, 실제 ${f(v,2)} m/s. `)+m;setMsg('wk-msg',m,ok?'ok':'no');}else setMsg('wk-msg',m);}
+    if(x>=L){x=L;finish(p,$('wk-msg').textContent,$('wk-msg').className.replace('msg','').trim());break;}}}
+  $('wk-W').textContent=f(Wd(p),2)+' J';$('wk-E0').textContent=f(.5*p.m*p.v0*p.v0,2)+' J';$('wk-E').textContent=f(.5*p.m*v*v,2)+' J';$('wk-vv').textContent=f(v,2)+' m/s';}
+ function draw(){const {ctx,w,h}=fit(cv),p=P();const lw=w*.66,X=m=>20+m/L*(lw-40),ty=h*.33;
+  // 구간
+  ctx.fillStyle=C('--force');ctx.globalAlpha=.13;ctx.fillRect(X(z0),ty-60,X(z0+p.s)-X(z0),60);ctx.globalAlpha=1;
+  txt(ctx,`힘 구간 s = ${p.s} m`,(X(z0)+X(z0+p.s))/2,ty-66,C('--force'),11,'center');
+  ctx.strokeStyle=C('--muted');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(10,ty);ctx.lineTo(lw-10,ty);ctx.stroke();
+  for(let m=0;m<=L;m++){ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(X(m),ty);ctx.lineTo(X(m),ty+5);ctx.stroke();txt(ctx,m+' m',X(m),ty+18,C('--muted'),10,'center',MONO);}
+  const cx=X(x),cw=22+p.m*5;rrect(ctx,cx-cw/2,ty-26,cw,20,4);ctx.fillStyle=C('--ink');ctx.fill();txt(ctx,p.m+'kg',cx,ty-16,C('--panel'),10,'center',MONO,'middle');
+  ctx.fillStyle=C('--muted');[cx-cw/3,cx+cw/3].forEach(q=>{ctx.beginPath();ctx.arc(q,ty-4,4,0,7);ctx.fill();});
+  if(x>=z0&&x<z0+p.s&&p.F!==0)arrow(ctx,cx,ty-36,cx+Math.sign(p.F)*(16+Math.abs(p.F)*2.5),ty-36,C('--force'),3);
+  txt(ctx,`v = ${f(v,2)} m/s`,cx,ty-46,C('--accent'),11,'center',MONO);
+  // F-x 그래프
+  const gy=ty+44,gh=h-gy-34,Fm=20,Y=F=>gy+gh/2-F/Fm*gh/2;
+  ctx.strokeStyle=C('--line');ctx.lineWidth=1;ctx.strokeRect(X(0),gy,X(L)-X(0),gh);ctx.beginPath();ctx.moveTo(X(0),Y(0));ctx.lineTo(X(L),Y(0));ctx.stroke();
+  const xe=Math.min(Math.max(x,z0),z0+p.s);ctx.fillStyle=C('--force');ctx.globalAlpha=.3;ctx.fillRect(X(z0),Math.min(Y(0),Y(p.F)),X(xe)-X(z0),Math.abs(Y(p.F)-Y(0)));ctx.globalAlpha=1;
+  ctx.strokeStyle=C('--force');ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(X(0),Y(0));ctx.lineTo(X(z0),Y(0));ctx.lineTo(X(z0),Y(p.F));ctx.lineTo(X(z0+p.s),Y(p.F));ctx.lineTo(X(z0+p.s),Y(0));ctx.lineTo(X(L),Y(0));ctx.stroke();
+  txt(ctx,'힘(N)',X(0)+4,gy+14,C('--ink'),11);txt(ctx,'+20',X(0)-4,gy+10,C('--muted'),10,'right',MONO);txt(ctx,'0',X(0)-4,Y(0)+4,C('--muted'),10,'right',MONO);txt(ctx,'이동 거리(m)',X(L),gy+gh+16,C('--muted'),10,'right');
+  txt(ctx,`넓이 = W = ${f(Wd(p),2)} J`,(X(z0)+X(z0+p.s))/2,p.F>=0?Y(p.F)-6:Y(p.F)+14,C('--force'),11,'center',MONO);
+  // 막대
+  const E0=.5*p.m*p.v0*p.v0,E=.5*p.m*v*v,mx=Math.max(10,E0+Math.max(0,p.F*p.s),E0)*1.1;
+  bars(ctx,lw+14,48,w-lw-28,h-120,[{lab:'처음 Ek',val:E0,col:C('--muted')},{lab:'한 일 W',val:Math.abs(Wd(p)),col:C('--force')},{lab:'지금 Ek',val:E,col:C('--accent'),line:E0+Wd(p)}],mx,'에너지');
+  if(Wd(p)<0)txt(ctx,'(W는 음수)',lw+14+(w-lw-28)/2,h-36,C('--force'),11,'center');
+  txt(ctx,'점선: 처음 Ek + W',lw+14,h-20,C('--muted'),10);
+ }
+ reset();sims.work={update,draw};
+})();
+
+/* ---------- 02 위치 에너지 ---------- */
+(()=>{const cv=$('c-pot');let mode='g',xv=0,v=0,run=false,drag=false,geo=null,peak=0;
+ bindOut('pt-m',v=>v.toFixed(1)+' kg');bindOut('pt-k',v=>v+' N/m');
+ const sl=$('pt-x');const out=()=>$('pt-xo').textContent=f(+sl.value,2)+' m';
+ const P=()=>({m:+$('pt-m').value,k:+$('pt-k').value});
+ function setMode(){mode=$('pt-mode').value;$('pt-k').disabled=mode==='g';$('pt-xl').textContent=mode==='g'?'높이 h':'늘어난 길이 x';
+  sl.min=mode==='g'?0:-0.5;sl.max=mode==='g'?2:0.5;reset();}
+ function reset(){run=false;v=0;xv=0;sl.value=0;out();$('pt-go').textContent='놓기';setMsg('pt-msg',mode==='g'?'물체를 잡고 위로 끌어 올려 보세요.':'물체를 잡고 오른쪽으로 끌어 용수철을 늘여 보세요.');peak=0;}
+ $('pt-mode').addEventListener('input',setMode);['pt-m','pt-k'].forEach(id=>$(id).addEventListener('input',()=>{if(!run)peak=0;}));
+ sl.addEventListener('input',()=>{run=false;v=0;xv=+sl.value;out();$('pt-go').textContent='놓기';});
+ $('pt-reset').onclick=reset;
+ $('pt-go').onclick=()=>{if(run){run=false;$('pt-go').textContent='계속';return;}if(Math.abs(xv)<1e-3&&v===0){setMsg('pt-msg','먼저 물체를 끌어 위치 에너지를 저장하세요.','no');return;}run=true;$('pt-go').textContent='멈춤';peak=Ep();};
+ const Ep=()=>{const p=P();return mode==='g'?p.m*G*xv:.5*p.k*xv*xv;};
+ $('pt-rec').onclick=()=>{const p=P();addRow('pt-tb',[mode==='g'?'중력':'탄성력',mode==='g'?p.m+' kg':p.k+' N/m',f(xv,2),f(Ep(),2)]);};
+ const XY=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+ cv.style.touchAction='none';
+ cv.addEventListener('pointerdown',e=>{if(!geo)return;const [mx,my]=XY(e);if(Math.hypot(mx-geo.bx,my-geo.by)>40)return;drag=true;run=false;v=0;$('pt-go').textContent='놓기';cv.setPointerCapture(e.pointerId);});
+ cv.addEventListener('pointermove',e=>{if(!drag)return;const [mx,my]=XY(e);
+  if(mode==='g')xv=Math.max(0,Math.min(2,(geo.gy-my-geo.off)/geo.sc));else xv=Math.max(-0.5,Math.min(0.5,(mx-geo.x0)/geo.sc));
+  sl.value=xv;out();});
+ const up=()=>{drag=false;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+ function update(dt){const p=P();
+  if(run){for(let i=0;i<20;i++){const h=dt/20;
+    if(mode==='g'){v-=G*h;xv+=v*h;if(xv<=0){xv=0;run=false;$('pt-go').textContent='놓기';setMsg('pt-msg',`바닥 직전: 위치 에너지 ${f(peak,2)} J가 모두 운동 에너지가 되었습니다(v = ${f(Math.abs(v),2)} m/s).`,'ok');break;}}
+    else{v+=-p.k/p.m*xv*h;xv+=v*h;const rem=peak-.5*p.k*xv*xv;if(rem>0&&Math.abs(v)>1e-9)v=Math.sign(v)*Math.sqrt(2*rem/p.m);}}
+   sl.value=xv;out();}
+  const ek=.5*p.m*v*v;$('pt-F').textContent=run?'0 N (놓음)':mode==='g'?f(p.m*G,1)+' N (위로)':f(p.k*Math.abs(xv),1)+' N';
+  $('pt-Ep').textContent=f(Ep(),2)+' J';$('pt-Ek').textContent=f(run||mode==='g'?ek:ek,2)+' J';$('pt-E').textContent=f(Ep()+ek,2)+' J';
+  if(drag)setMsg('pt-msg',mode==='g'?`중력과 같은 크기의 힘 ${f(p.m*G,1)} N으로 ${f(xv,2)} m 들어 올리는 일 = ${f(Ep(),2)} J`:`늘어난 길이에 비례하는 힘으로 당김: 한 일 = ½kx² = ${f(Ep(),2)} J`);
+  else if(run&&mode==='k')setMsg('pt-msg','탄성력만 받는 동안 Ep와 Ek는 서로 바뀌지만 합은 일정합니다.');}
+ function draw(){const {ctx,w,h}=fit(cv),p=P();const lw=w*.42;
+  if(mode==='g'){const gy=h-40,sc=(h-110)/2,bx=lw*.55,by=gy-xv*sc-18;geo={bx,by,gy,sc,off:18};
+   ctx.fillStyle=C('--grid');ctx.fillRect(0,gy,lw,40);ctx.strokeStyle=C('--muted');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(lw,gy);ctx.stroke();
+   ctx.lineWidth=1;for(let q=0;q<=2;q+=0.5){const Y=gy-q*sc;ctx.beginPath();ctx.moveTo(30,Y);ctx.lineTo(40,Y);ctx.stroke();txt(ctx,q.toFixed(1)+' m',26,Y+4,C('--muted'),10,'right',MONO);}
+   ctx.beginPath();ctx.moveTo(35,gy);ctx.lineTo(35,gy-2*sc);ctx.stroke();
+   const s=28+p.m*4;rrect(ctx,bx-s/2,by-s/2+(18-s/2),s,s,4);ctx.fillStyle=C('--accent');ctx.fill();txt(ctx,p.m+'kg',bx,by+(18-s/2),'#fff',11,'center',MONO,'middle');
+   if(!run&&xv>0)arrow(ctx,bx+s/2+14,by+30,bx+s/2+14,by-10,C('--force'),3);
+   if(drag||(!run&&xv>0))txt(ctx,'F = mg',bx+s/2+20,by+10,C('--force'),11,'left',MONO);
+   txt(ctx,`h = ${f(xv,2)} m`,bx,gy+22,C('--ink'),12,'center',MONO);}
+  else{const wy=h*.55,x0=lw*.5,sc=(lw*.42)/0.5,bx=x0+xv*sc,by=wy;geo={bx,by,x0,sc};
+   ctx.fillStyle=C('--muted');ctx.fillRect(8,wy-50,10,80);ctx.fillStyle=C('--grid');ctx.fillRect(8,wy+30,lw-16,8);
+   const n=14,sx=18,ex=bx-22;ctx.strokeStyle=C('--ink');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(sx,wy);for(let i=1;i<n;i++){ctx.lineTo(sx+(ex-sx)*i/n,wy+(i%2?-12:12));}ctx.lineTo(ex,wy);ctx.stroke();
+   ctx.strokeStyle=C('--line');ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x0,wy-46);ctx.lineTo(x0,wy+30);ctx.stroke();ctx.setLineDash([]);txt(ctx,'평형 위치',x0,wy-50,C('--muted'),10,'center');
+   rrect(ctx,bx-22,wy-22,44,44,4);ctx.fillStyle=C('--accent');ctx.fill();txt(ctx,p.m+'kg',bx,wy,'#fff',11,'center',MONO,'middle');
+   if(Math.abs(xv)>0.005)arrow(ctx,bx,wy+40,bx-Math.sign(xv)*(12+Math.abs(xv)*p.k*0.6),wy+40,C('--good'),3);
+   if(Math.abs(xv)>0.005)txt(ctx,'탄성력',bx,wy+60,C('--good'),11,'center');
+   txt(ctx,`x = ${f(xv,2)} m`,bx,wy-32,C('--ink'),12,'center',MONO);}
+  // 그래프
+  const gx=lw+20,gw=w*.33,gy0=40,gh=h-110;ctx.strokeStyle=C('--line');ctx.lineWidth=1;ctx.strokeRect(gx,gy0,gw,gh);
+  if(mode==='g'){const Fm=60,X=q=>gx+q/2*gw,Y=F=>gy0+gh-F/Fm*gh,F=p.m*G;
+   ctx.fillStyle=C('--good');ctx.globalAlpha=.3;ctx.fillRect(X(0),Y(F),X(xv)-X(0),Y(0)-Y(F));ctx.globalAlpha=1;
+   ctx.strokeStyle=C('--force');ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(X(0),Y(F));ctx.lineTo(X(2),Y(F));ctx.stroke();
+   txt(ctx,'드는 힘 F(N)',gx+4,gy0+14,C('--ink'),11);txt(ctx,'높이(m)',gx+gw,gy0+gh+16,C('--muted'),10,'right');txt(ctx,`F = mg = ${f(F,1)} N`,gx+gw-4,Y(F)-6,C('--force'),10,'right',MONO);
+   txt(ctx,'넓이 = mgh',X(xv/2),Y(F/2),C('--good'),11,'center',MONO);txt(ctx,'2',X(2),gy0+gh+16,C('--muted'),10,'center',MONO);txt(ctx,'60',gx-4,gy0+10,C('--muted'),10,'right',MONO);}
+  else{const Fm=100,X=q=>gx+q/0.5*gw,Y=F=>gy0+gh-F/Fm*gh,ax=Math.abs(xv);
+   ctx.fillStyle=C('--good');ctx.globalAlpha=.3;ctx.beginPath();ctx.moveTo(X(0),Y(0));ctx.lineTo(X(ax),Y(0));ctx.lineTo(X(ax),Y(p.k*ax));ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+   ctx.strokeStyle=C('--force');ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(X(0),Y(0));ctx.lineTo(X(Math.min(0.5,Fm/p.k)),Y(Math.min(Fm,p.k*0.5)));ctx.stroke();
+   txt(ctx,'당기는 힘 F(N)',gx+4,gy0+14,C('--ink'),11);txt(ctx,'|x| (m)',gx+gw,gy0+gh+16,C('--muted'),10,'right');txt(ctx,'F = kx',X(0.3),Y(p.k*0.3)-8,C('--force'),11,'right',MONO);
+   txt(ctx,'넓이 = ½kx²',X(ax*0.66),Y(p.k*ax*0.25),C('--good'),11,'center',MONO);txt(ctx,'0.5',X(0.5),gy0+gh+16,C('--muted'),10,'center',MONO);txt(ctx,'100',gx-4,gy0+10,C('--muted'),10,'right',MONO);}
+  const ek=.5*p.m*v*v,E=Ep()+ek,mx=Math.max(5,peak,E)*1.15;
+  bars(ctx,gx+gw+18,60,w-(gx+gw+18)-12,h-130,[{lab:'Ep',val:Ep(),col:C('--good')},{lab:'Ek',val:ek,col:C('--accent')},{lab:'합',val:E,col:C('--ink')}],mx,'에너지');
+ }
+ setMode();sims.pot={update,draw};
+})();
+
+/* ---------- 03 역학적 에너지 보존 ---------- */
+(()=>{const cv=$('c-track');let x=1,v=0,Q=0,run=false,x0=1,E0=0,drag=false,geo=null,stopped=false;const XM=10;
+ bindOut('tr-m',v=>v+' kg');bindOut('tr-mu',v=>v.toFixed(2));
+ const shapes={u:x=>0.08*(x-5)**2,coaster:x=>1.6+Math.cos(Math.PI*x/3.4)-0.04*x,slide:x=>x<5?2.4*(1-x/5)**2:0};
+ const y=x=>shapes[$('tr-shape').value](x),dy=x=>(y(x+1e-4)-y(x-1e-4))/2e-4;
+ const P=()=>({m:+$('tr-m').value,mu:+$('tr-mu').value});
+ function place(nx){x=Math.max(0.05,Math.min(XM-0.05,nx));x0=x;v=0;Q=0;E0=P().m*G*y(x);stopped=false;}
+ function reset(){run=false;$('tr-run').textContent='출발';place({u:0.6,coaster:0.3,slide:0.2}[$('tr-shape').value]);setMsg('tr-msg','공을 잡고 출발 위치를 정한 뒤 ‘출발’을 누르세요.');}
+ $('tr-shape').addEventListener('input',reset);$('tr-m').addEventListener('input',()=>{if(!run)place(x0);});$('tr-mu').addEventListener('input',()=>{if(!run)place(x);});
+ $('tr-reset').onclick=()=>{run=false;$('tr-run').textContent='출발';place(x0);};
+ $('tr-run').onclick=()=>{if(stopped)place(x0);run=!run;$('tr-run').textContent=run?'일시정지':'계속';};
+ $('tr-rec').onclick=()=>{const p=P(),ek=.5*p.m*v*v,ep=p.m*G*y(x);addRow('tr-tb',[f(y(x),2),f(Math.abs(v),2),f(ek,1),f(ep,1),f(Q,1),f(ek+ep+Q,1)]);};
+ cv.style.touchAction='none';
+ const XY=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+ cv.addEventListener('pointerdown',e=>{if(!geo||run)return;const [mx,my]=XY(e);if(Math.hypot(mx-geo.X(x),my-geo.Y(y(x)))>36)return;drag=true;cv.setPointerCapture(e.pointerId);});
+ cv.addEventListener('pointermove',e=>{if(!drag)return;const [mx]=XY(e);place(geo.ix(mx));});
+ const up=()=>{drag=false;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+ function update(dt){const p=P();
+  if(run){for(let i=0;i<40;i++){const h=dt/40,s=dy(x),th=Math.atan(s),c=Math.cos(th),sn=Math.sin(th);
+    let a=-G*sn;if(Math.abs(v)>1e-6)a-=Math.sign(v)*p.mu*G*c;else if(Math.abs(Math.tan(th))<=p.mu){v=0;run=false;stopped=true;$('tr-run').textContent='다시 출발';setMsg('tr-msg',`멈췄습니다. 줄어든 역학적 에너지 ${f(E0-p.m*G*y(x),1)} J가 모두 열에너지로 바뀌었습니다.`,'ok');break;}
+    const vOld=v;v+=a*h;if(p.mu>0&&vOld!==0&&Math.sign(v)!==Math.sign(vOld)){v=0;}
+    const xOld=x;x+=v*c*h;Q+=p.mu*p.m*G*c*Math.abs(v)*h;
+    if(x<0.02||x>XM-0.02){x=Math.max(0.02,Math.min(XM-0.02,x));v=-v;}
+    const rem=E0-Q-p.m*G*y(x);if(rem<0){x=xOld;v=0;}else if(Math.abs(v)>1e-6)v=Math.sign(v)*Math.sqrt(2*rem/p.m);}
+   if(run&&p.mu===0)setMsg('tr-msg','마찰이 없으므로 운동 에너지와 위치 에너지의 합이 처음 값과 같게 유지됩니다.');
+   else if(run)setMsg('tr-msg','마찰 때문에 역학적 에너지가 줄고 그만큼 열에너지가 늘어납니다. 총에너지는 그대로입니다.');}
+  const ek=.5*p.m*v*v,ep=p.m*G*y(x);$('tr-h').textContent=f(y(x),2)+' m';$('tr-v').textContent=f(Math.abs(v),2)+' m/s';$('tr-kp').textContent=`${f(ek,1)} / ${f(ep,1)} J`;
+  $('tr-E').textContent=f(ek+ep,1)+' J';$('tr-Q').textContent=f(Q,1)+' J';$('tr-T').textContent=f(ek+ep+Q,1)+' J';}
+ function draw(){const {ctx,w,h}=fit(cv),p=P();const lw=w*.66,ymax=2.8,sx=(lw-40)/XM,sy=(h-70)/ymax,ox=20,oy=h-30,X=q=>ox+q*sx,Y=q=>oy-q*sy;
+  geo={X,Y,ix:mx=>(mx-ox)/sx};
+  ctx.strokeStyle=C('--line');ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(X(0),Y(y(x0)));ctx.lineTo(X(XM),Y(y(x0)));ctx.stroke();ctx.setLineDash([]);
+  txt(ctx,'출발 높이',X(XM)-4,Y(y(x0))-5,C('--muted'),10,'right');
+  ctx.beginPath();ctx.moveTo(X(0),Y(y(0)));for(let i=1;i<=200;i++){const q=XM*i/200;ctx.lineTo(X(q),Y(y(q)));}ctx.lineTo(X(XM),oy+20);ctx.lineTo(X(0),oy+20);ctx.closePath();ctx.fillStyle=C('--grid');ctx.fill();
+  ctx.strokeStyle=C('--ink');ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<=200;i++){const q=XM*i/200;i?ctx.lineTo(X(q),Y(y(q))):ctx.moveTo(X(q),Y(y(q)));}ctx.stroke();
+  if(p.mu>0){ctx.strokeStyle=C('--bad');ctx.globalAlpha=Math.min(.8,p.mu*3);ctx.setLineDash([2,4]);ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<=200;i++){const q=XM*i/200;i?ctx.lineTo(X(q),Y(y(q))+3):ctx.moveTo(X(q),Y(y(q))+3);}ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;}
+  // 높이 눈금
+  ctx.strokeStyle=C('--muted');ctx.lineWidth=1;for(let q=0;q<=2.5;q+=0.5){ctx.beginPath();ctx.moveTo(X(0),Y(q));ctx.lineTo(X(0)+5,Y(q));ctx.stroke();txt(ctx,q.toFixed(1),X(0)+8,Y(q)+3,C('--muted'),9,'left',MONO);}
+  const th=Math.atan(dy(x)*sy/sx),r=10,bx=X(x)-Math.sin(th)*r,by=Y(y(x))-Math.cos(th)*r;
+  ctx.fillStyle=C('--accent');ctx.beginPath();ctx.arc(bx,by,r,0,7);ctx.fill();if(!run){ctx.strokeStyle=C('--accent');ctx.globalAlpha=.4;ctx.lineWidth=2;ctx.beginPath();ctx.arc(bx,by,r+6,0,7);ctx.stroke();ctx.globalAlpha=1;}
+  if(Q>0.05){ctx.fillStyle=C('--bad');ctx.globalAlpha=Math.min(.6,Q/Math.max(E0,1));ctx.beginPath();ctx.arc(X(x),Y(y(x)),14,0,7);ctx.fill();ctx.globalAlpha=1;}
+  const ek=.5*p.m*v*v,ep=p.m*G*y(x),mx=Math.max(E0,1)*1.15;
+  bars(ctx,lw+14,48,w-lw-26,h-110,[{lab:'Ek',val:ek,col:C('--accent')},{lab:'Ep',val:ep,col:C('--good')},{lab:'열',val:Q,col:C('--bad')},{lab:'총',val:ek+ep+Q,col:C('--ink'),line:E0}],mx,'에너지');
+ }
+ reset();sims.track={update,draw};
+})();
+
+/* ---------- 04 열과 상태 변화 ---------- */
+(()=>{const cv=$('c-phase');const M=100;const ci=2.1,cw=4.18,cs=2.0,Lf=334,Lv=2260;
+ const B=[0,M*ci*20];B.push(B[1]+M*Lf);B.push(B[2]+M*cw*100);B.push(B[3]+M*Lv);B.push(B[4]+M*cs*30);
+ let Q=0,dir=0,tt=0,hist=[[0,-20]],seen=new Set();
+ bindOut('ph-P',v=>v+' W');
+ function state(Q){if(Q<B[1])return {T:-20+Q/(M*ci),ph:'고체(얼음)',fl:0,fg:0,k:0};
+  if(Q<B[2])return {T:0,ph:'고체 + 액체(녹는 중)',fl:(Q-B[1])/(B[2]-B[1]),fg:0,k:1};
+  if(Q<B[3])return {T:(Q-B[2])/(M*cw),ph:'액체(물)',fl:1,fg:0,k:2};
+  if(Q<B[4])return {T:100,ph:'액체 + 기체(끓는 중)',fl:1,fg:(Q-B[3])/(B[4]-B[3]),k:3};
+  return {T:100+Math.min(30,(Q-B[4])/(M*cs)),ph:'기체(수증기)',fl:1,fg:1,k:4};}
+ const N=48,parts=[...Array(N)].map((_,i)=>({i,x:Math.random(),y:Math.random(),vx:Math.random()-.5,vy:Math.random()-.5}));
+ $('ph-heat').onclick=()=>{dir=1;};$('ph-cool').onclick=()=>{dir=-1;};$('ph-stop').onclick=()=>{dir=0;};
+ $('ph-reset').onclick=()=>{dir=0;Q=0;tt=0;hist=[[0,-20]];seen.clear();};
+ const msgs=['얼음의 온도가 올라갑니다. 흡수한 열에너지가 입자 운동을 활발하게 합니다.','0 °C에서 온도가 변하지 않습니다. 흡수한 열에너지는 얼음을 녹이는 데(융해) 쓰입니다.','물의 온도가 올라갑니다.','100 °C에서 온도가 변하지 않습니다. 흡수한 열에너지는 물을 수증기로 바꾸는 데(기화) 쓰입니다.','수증기의 온도가 올라갑니다.'];
+ const cmsgs=['얼음의 온도가 내려갑니다.','0 °C에서 물이 얼면서(응고) 열에너지를 방출합니다. 온도는 일정합니다.','물의 온도가 내려갑니다.','100 °C에서 수증기가 물이 되면서(액화) 열에너지를 방출합니다. 구름이 만들어질 때와 같은 과정입니다.','수증기의 온도가 내려갑니다.'];
+ function update(dt){const P=+$('ph-P').value,sp=+$('ph-sp').value;
+  if(dir){const dq=dir*P*dt*sp;Q=Math.max(0,Math.min(B[5],Q+dq));tt+=dt*sp;if(Q<=0||Q>=B[5])dir=0;const s=state(Q);hist.push([Q,s.T]);if(hist.length>4000)hist.splice(1,1);}
+  const s=state(Q);seen.add(s.k);
+  $('ph-st').textContent=s.ph;$('ph-T').textContent=f(s.T,1)+' °C';$('ph-Q').textContent=f(Q/1000,1)+' kJ';$('ph-t').textContent=f(tt,0)+' s';
+  setMsg('ph-msg',dir>=0?msgs[s.k]:cmsgs[s.k],(s.k===1||s.k===3)?'ok':'');
+  const temp=s.T+273;parts.forEach(q=>{const sp2=Math.sqrt(temp)/18;q.x+=q.vx*sp2*dt;q.y+=q.vy*sp2*dt;
+   if(q.x<0||q.x>1){q.vx*=-1;q.x=Math.max(0,Math.min(1,q.x));}if(q.y<0||q.y>1){q.vy*=-1;q.y=Math.max(0,Math.min(1,q.y));}});}
+ function draw(){const {ctx,w,h}=fit(cv);const s=state(Q);const bw=w*.34,bx=16,by=40,bh=h-110;
+  // 비커
+  ctx.strokeStyle=C('--ink');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx,by+bh);ctx.lineTo(bx+bw,by+bh);ctx.lineTo(bx+bw,by);ctx.stroke();
+  // 가열기
+  const hot=dir>0,cold=dir<0;ctx.fillStyle=hot?C('--bad'):cold?C('--accent'):C('--grid');ctx.fillRect(bx-4,by+bh+6,bw+8,12);txt(ctx,hot?'가열 중':cold?'냉각 중':'멈춤',bx+bw/2,by+bh+34,hot?C('--bad'):cold?C('--accent'):C('--muted'),12,'center');
+  const cols=8,rows=6,cs2=Math.min(bw/(cols+2),bh*0.35/rows);
+  parts.forEach(q=>{const i=q.i,isL=i/N<s.fl,isG=i/N<s.fg;let X,Y,col;
+   if(isG){X=bx+8+q.x*(bw-16);Y=by+8+q.y*(bh-16);col=C('--force');}
+   else if(isL){X=bx+8+q.x*(bw-16);Y=by+bh-8-q.y*bh*0.4;col=C('--accent');}
+   else{const c=i%cols,r=Math.floor(i/cols)%rows,amp=Math.max(0.5,(s.T+40)/20);X=bx+(bw-cols*cs2)/2+c*cs2+cs2/2+Math.sin(performance.now()/90+i)*amp;Y=by+bh-8-r*cs2-cs2/2+Math.cos(performance.now()/70+i*2)*amp;col=C('--mass');}
+   ctx.fillStyle=col;ctx.beginPath();ctx.arc(X,Y,Math.max(3,cs2*0.32),0,7);ctx.fill();});
+  // 온도계
+  const tx=bx+bw+22,ty0=by,th=bh,Ty=T=>ty0+th-(T+30)/170*th;
+  ctx.strokeStyle=C('--muted');ctx.lineWidth=1;rrect(ctx,tx-5,ty0,10,th,5);ctx.stroke();ctx.fillStyle=C('--bad');ctx.fillRect(tx-3,Ty(s.T),6,ty0+th-Ty(s.T));
+  [-20,0,50,100,130].forEach(T=>{ctx.beginPath();ctx.moveTo(tx+6,Ty(T));ctx.lineTo(tx+11,Ty(T));ctx.stroke();txt(ctx,T+'°',tx+13,Ty(T)+3,C('--muted'),9,'left',MONO);});
+  // 그래프
+  const gx=tx+48,gw=w-gx-16,gy=by,gh=bh,X=q=>gx+q/B[5]*gw,Y=T=>gy+gh-(T+30)/170*gh;
+  ctx.strokeStyle=C('--line');ctx.strokeRect(gx,gy,gw,gh);
+  [0,100].forEach(T=>{ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(gx,Y(T));ctx.lineTo(gx+gw,Y(T));ctx.stroke();ctx.setLineDash([]);txt(ctx,T+' °C',gx-4,Y(T)+4,C('--muted'),10,'right',MONO);});
+  txt(ctx,'−20',gx-4,Y(-20)+4,C('--muted'),10,'right',MONO);
+  ctx.strokeStyle=C('--bad');ctx.lineWidth=2.5;ctx.beginPath();hist.forEach((q,i)=>i?ctx.lineTo(X(q[0]),Y(q[1])):ctx.moveTo(X(q[0]),Y(q[1])));ctx.stroke();
+  ctx.fillStyle=C('--bad');ctx.beginPath();ctx.arc(X(Q),Y(s.T),5,0,7);ctx.fill();
+  if(seen.has(1)||Q>B[2])txt(ctx,'융해',X((B[1]+B[2])/2),Y(0)-8,C('--mass'),11,'center');
+  if(seen.has(3)||Q>B[4])txt(ctx,'기화',X((B[3]+B[4])/2),Y(100)-8,C('--force'),11,'center');
+  [0,100,200,300].forEach(k=>txt(ctx,k+'',X(k*1000),gy+gh+14,C('--muted'),10,'center',MONO));txt(ctx,'공급한 열에너지 (kJ)',gx+gw,gy+gh+28,C('--muted'),10,'right');
+  txt(ctx,'온도',gx+6,gy+14,C('--ink'),11);
+ }
+ sims.phase={update,draw};
+})();
+
+/* ---------- 05 에너지 효율 ---------- */
+(()=>{const cv=$('c-eff');let prog=0,run=false,shown=false,gear=0;
+ bindOut('ef-Q1',v=>v+' J');bindOut('ef-Q2',v=>v+' J');bindOut('ef-m',v=>v+' kg');
+ const P=()=>{const Q1=+$('ef-Q1').value;let Q2=+$('ef-Q2').value;if(Q2>Q1){Q2=Q1;}return {Q1,Q2,W:Q1-Q2,m:+$('ef-m').value};};
+ const q2=$('ef-Q2');
+ function clamp(){const Q1=+$('ef-Q1').value;q2.max=Q1;if(+q2.value>Q1)q2.value=Q1;$('ef-Q2o').textContent=q2.value+' J';}
+ $('ef-Q1').addEventListener('input',()=>{clamp();$('ef-pre').value='';hide();});
+ q2.addEventListener('input',()=>{$('ef-pre').value='';hide();if(+q2.value<=1)setMsg('ef-msg','방출하는 열을 0으로 할 수는 없습니다. 열을 역학적 에너지로 바꾸는 장치는 낮은 온도 쪽으로 반드시 열을 내보내야 작동합니다.','no');});
+ $('ef-m').addEventListener('input',()=>{prog=0;});
+ $('ef-pre').addEventListener('input',()=>{const v=$('ef-pre').value;if(!v)return;const [a,b]=v.split(',').map(Number);$('ef-Q1').value=a;$('ef-Q1o').textContent=a+' J';clamp();q2.value=b;$('ef-Q2o').textContent=b+' J';hide();});
+ function hide(){shown=false;prog=0;run=false;$('ef-e').textContent='작동 후 공개';setMsg('ef-msg','');}
+ $('ef-run').onclick=()=>{prog=0;run=true;};
+ $('ef-rec').onclick=()=>{const p=P();addRow('ef-tb',[p.Q1,p.Q2,p.W,f(p.W/p.Q1,3),$('ef-guess').value||'–']);};
+ function update(dt){const p=P();if(run){prog=Math.min(1,prog+dt/2.5);gear+=dt*(1+p.W/p.Q1*12);if(prog>=1){run=false;shown=true;const e=p.W/p.Q1,g=$('ef-guess').value;
+   let m=`공급한 ${p.Q1} J = 역학적 에너지 ${p.W} J + 방출된 열 ${p.Q2} J. 효율 = ${p.W}/${p.Q1} = ${f(e,3)}`;
+   if(g!==''){const ok=Math.abs(+g-e)<0.01;setMsg('ef-msg',(ok?'예측 적중! ':`예측 ${g}. `)+m,ok?'ok':'no');}else setMsg('ef-msg',m);}}
+  $('ef-W').textContent=p.W+' J';$('ef-h').textContent=f(p.W/(p.m*G)*prog,3)+' m';if(shown)$('ef-e').textContent=f(p.W/p.Q1,3)+` (${f(p.W/p.Q1*100,1)} %)`;}
+ function draw(){const {ctx,w,h}=fit(cv),p=P();const cx=w*.34,cy=h*.46,R=Math.min(w,h)*.11,mx=1000,wd=q=>3+q/mx*40;
+  // 고온·저온
+  rrect(ctx,cx-90,22,180,44,6);ctx.fillStyle=C('--bad');ctx.fill();txt(ctx,'고온 (열원)',cx,48,'#fff',13,'center');
+  rrect(ctx,cx-90,h-66,180,44,6);ctx.fillStyle=C('--accent');ctx.fill();txt(ctx,'저온 (주변)',cx,h-40,'#fff',13,'center');
+  const t=prog;
+  // 흐름 화살표
+  ctx.globalAlpha=.85;arrow(ctx,cx,70,cx,cy-R-6,C('--bad'),wd(p.Q1));arrow(ctx,cx,cy+R+6,cx,h-72,C('--force'),wd(p.Q2));
+  arrow(ctx,cx+R+6,cy,w*.66,cy,C('--accent'),wd(p.W));ctx.globalAlpha=1;
+  txt(ctx,`공급 ${p.Q1} J`,cx+wd(p.Q1)/2+8,(70+cy-R)/2,C('--bad'),12,'left',MONO);
+  txt(ctx,`방출 ${p.Q2} J`,cx+wd(p.Q2)/2+8,(cy+R+h-72)/2,C('--force'),12,'left',MONO);
+  txt(ctx,`일 ${p.W} J`,(cx+R+w*.66)/2,cy-wd(p.W)/2-8,C('--accent'),12,'center',MONO);
+  // 기관(톱니)
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(gear);ctx.fillStyle=C('--ink');ctx.beginPath();for(let i=0;i<24;i++){const a=i/24*Math.PI*2,r=i%2?R:R*1.18;ctx.lineTo(r*Math.cos(a),r*Math.sin(a));}ctx.closePath();ctx.fill();
+  ctx.fillStyle=C('--panel');ctx.beginPath();ctx.arc(0,0,R*.35,0,7);ctx.fill();ctx.restore();txt(ctx,'열기관',cx-R-10,cy+4,C('--ink'),12,'right');
+  // 추 들어 올리기
+  const px=w*.8,top=34,hmax=h-120,hh=p.W/(p.m*G),scale=hmax/Math.max(hh,0.05),Yb=h-50-hh*t*Math.min(scale,hmax/Math.max(hh,1e-3));
+  ctx.strokeStyle=C('--muted');ctx.lineWidth=2;ctx.beginPath();ctx.arc(px,top+10,12,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(w*.66,cy);ctx.lineTo(px-12,top+10);ctx.moveTo(px+12,top+10);ctx.lineTo(px+12,Yb-16);ctx.stroke();
+  const bs=18+p.m*1.6;rrect(ctx,px+12-bs/2,Yb-16,bs,bs,3);ctx.fillStyle=C('--mass');ctx.fill();txt(ctx,p.m+'kg',px+12,Yb-16+bs/2,'#fff',10,'center',MONO,'middle');
+  ctx.fillStyle=C('--grid');ctx.fillRect(px-40,h-50+bs-16,110,6);
+  txt(ctx,`h = ${f(hh*t,3)} m`,px+12,h-14,C('--ink'),12,'center',MONO);
+  // 분배 막대
+  const bx=16,bw=w*.5-24,yb=h-14;ctx.fillStyle=C('--accent');ctx.fillRect(bx,yb-8,bw*p.W/p.Q1,8);ctx.fillStyle=C('--force');ctx.fillRect(bx+bw*p.W/p.Q1,yb-8,bw*p.Q2/p.Q1,8);
+ }
+ clamp();sims.eff={update,draw};
+})();
+
+/* ---------- 06 영구 기관 ---------- */
+(()=>{const cv=$('c-perp');let th=0,om=0,drag=null,geo=null,cyc=0,lvl=1,ph=0;const n=8,m=1,Ro=1.0,Ri=0.5;
+ bindOut('pp-fr',v=>v.toFixed(2));
+ const rad=phi=>{const c=Math.cos(phi);return Ri+(Ro-Ri)*(0.5+0.5*Math.tanh(c/0.25));};
+ const pos=t=>[...Array(n)].map((_,i)=>{const phi=t+i*2*Math.PI/n,r=rad(phi);return {x:r*Math.cos(phi),y:r*Math.sin(phi),r};});
+ const U=t=>pos(t).reduce((s,q)=>s+m*G*q.y,0);
+ const I=()=>pos(th).reduce((s,q)=>s+m*q.r*q.r,0)+2;
+ function mode(){return $('pp-mode').value;}
+ $('pp-mode').addEventListener('input',()=>{reset();});
+ function reset(){th=0.3;om=0;cyc=0;lvl=1;ph=0;$('pp-spin').textContent=mode()==='wheel'?'힘껏 돌리기':'물 흘려보내기';
+  $('pp-cap').textContent=mode()==='wheel'?'바퀴를 잡고 돌려 보세요. 아래 그래프는 회전 각도에 따른 추들의 위치 에너지 합입니다.':'위 물통의 물이 떨어져 수차를 돌리고, 그 일로 스크루가 물을 다시 끌어 올립니다.';
+  document.getElementById('pp-read').style.display=mode()==='wheel'?'':'none';setMsg('pp-msg','');}
+ $('pp-reset').onclick=reset;
+ $('pp-spin').onclick=()=>{if(mode()==='wheel'){om=-4;}else{ph=ph||0.0001;}};
+ cv.style.touchAction='none';const XY=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+ cv.addEventListener('pointerdown',e=>{if(!geo||mode()!=='wheel')return;const [mx,my]=XY(e);const d=Math.hypot(mx-geo.cx,my-geo.cy);if(d>geo.s*1.2)return;drag={a0:Math.atan2(-(my-geo.cy),mx-geo.cx),t0:th};om=0;cv.setPointerCapture(e.pointerId);});
+ cv.addEventListener('pointermove',e=>{if(!drag)return;const [mx,my]=XY(e);th=drag.t0+Math.atan2(-(my-geo.cy),mx-geo.cx)-drag.a0;});
+ const up=()=>{drag=null;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+ function update(dt){const fr=+$('pp-fr').value;
+  if(mode()==='wheel'){
+   if(!drag){for(let i=0;i<20;i++){const h=dt/20,tq=-(U(th+1e-4)-U(th-1e-4))/2e-4;om+=(tq-fr*3*om)/I()*h;th+=om*h;}}
+   const ps=pos(th);let L=0,R=0;ps.forEach(q=>{const t=m*G*Math.abs(q.x);if(q.x<0)L+=t;else R+=t;});
+   $('pp-a').textContent=f(((th*180/Math.PI)%360+360)%360,0)+'°';$('pp-l').textContent=f(L,2)+' N·m (반시계)';$('pp-r').textContent=f(R,2)+' N·m (시계)';$('pp-n').textContent=f(L-R,2)+' N·m';
+   const ke=.5*I()*om*om;$('pp-k').textContent=f(ke,2)+' J';
+   if(drag)setMsg('pp-msg',L>R?'지금은 왼쪽 돌림힘이 더 큽니다. 하지만 돌아가면서 추를 바깥으로 옮기는 데 일이 필요합니다.':'지금은 오른쪽 돌림힘이 더 큽니다.');
+   else if(Math.abs(om)<0.02&&fr>0)setMsg('pp-msg','회전판이 멈췄습니다. 추들의 위치 에너지 합이 가장 작은 각도에서 평형을 이룹니다.','ok');
+   else if(fr===0)setMsg('pp-msg','마찰이 없어도 처음 준 운동 에너지보다 커지지 않습니다. 계속 돌기만 할 뿐 외부에 일을 시키면 곧 멈춥니다.');
+   else setMsg('pp-msg','마찰 때문에 회전 운동 에너지가 줄어듭니다. 저절로 늘어나는 에너지는 없습니다.');}
+  else{const loss=fr*0.3;if(ph>0){ph+=dt/2.2;if(ph>=1){ph=0.0001;cyc++;lvl=lvl*(1-loss);if(lvl<0.05){lvl=0;ph=0;}}}
+   setMsg('pp-msg',loss===0?`마찰이 없으면 끌어 올린 물의 위치 에너지는 처음과 같습니다. 외부에 할 수 있는 일은 0입니다. (반복 ${cyc}회)`:`한 번 돌 때마다 마찰로 ${f(loss*100,0)} %의 에너지가 열로 빠져나가 물통의 수위가 낮아집니다. (반복 ${cyc}회, 남은 에너지 ${f(lvl*100,0)} %)`,loss===0?'':'no');}}
+ function draw(){const {ctx,w,h}=fit(cv);
+  if(mode()==='wheel'){const s=Math.min(w*.3,h*.3),cx=w*.32,cy=h*.42;geo={cx,cy,s};
+   ctx.strokeStyle=C('--line');ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(cx,cy-s*1.25);ctx.lineTo(cx,cy+s*1.25);ctx.stroke();ctx.setLineDash([]);
+   ctx.strokeStyle=C('--ink');ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,s*Ro*1.05,0,7);ctx.stroke();
+   pos(th).forEach((q,i)=>{const X=cx+q.x*s,Y=cy-q.y*s,phi=th+i*2*Math.PI/n;ctx.strokeStyle=C('--muted');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Ro*Math.cos(phi)*s,cy-Ro*Math.sin(phi)*s);ctx.stroke();
+    ctx.strokeStyle=C('--force');ctx.globalAlpha=.4;ctx.lineWidth=1;ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(X,Y);ctx.lineTo(cx,Y);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+    ctx.fillStyle=q.x<0?C('--accent'):C('--mass');ctx.beginPath();ctx.arc(X,Y,9,0,7);ctx.fill();});
+   ctx.fillStyle=C('--ink');ctx.beginPath();ctx.arc(cx,cy,6,0,7);ctx.fill();
+   txt(ctx,'왼쪽 추',cx-s*1.1,cy-s*1.15,C('--accent'),12,'left');txt(ctx,'오른쪽 추',cx+s*1.1,cy-s*1.15,C('--mass'),12,'right');
+   // U 그래프
+   const gx=w*.64,gw=w*.33,gy=36,gh=h*.42;ctx.strokeStyle=C('--line');ctx.lineWidth=1;ctx.strokeRect(gx,gy,gw,gh);
+   let lo=1e9,hi=-1e9;const N=180;const vals=[];for(let i=0;i<=N;i++){const v=U(i/N*2*Math.PI);vals.push(v);lo=Math.min(lo,v);hi=Math.max(hi,v);}
+   const Y=v=>gy+gh-8-(v-lo)/(hi-lo+1e-9)*(gh-16),X=i=>gx+i/N*gw;
+   ctx.strokeStyle=C('--good');ctx.lineWidth=2;ctx.beginPath();vals.forEach((v,i)=>i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)));ctx.stroke();
+   const a=((th%(2*Math.PI))+2*Math.PI)%(2*Math.PI);ctx.fillStyle=C('--bad');ctx.beginPath();ctx.arc(gx+a/(2*Math.PI)*gw,Y(U(th)),5,0,7);ctx.fill();
+   txt(ctx,'추들의 위치 에너지 합',gx+6,gy+14,C('--ink'),11);txt(ctx,'0°',gx,gy+gh+14,C('--muted'),10,'center',MONO);txt(ctx,'360°',gx+gw,gy+gh+14,C('--muted'),10,'center',MONO);
+   txt(ctx,'45°마다 같은 값으로 돌아옴',gx+gw/2,gy+gh+28,C('--good'),11,'center');
+   const ke=.5*I()*om*om;bars(ctx,gx,gy+gh+70,gw,h-(gy+gh+70)-30,[{lab:'회전 운동 에너지',val:ke,col:C('--accent')}],Math.max(30,ke*1.2),'');}
+  else{const lw=w*.62,tx=30,ty=40,tw=100,thh=h*.5;
+   // 위 물통
+   ctx.strokeStyle=C('--ink');ctx.lineWidth=2;ctx.strokeRect(tx,ty,tw,thh*.4);ctx.fillStyle=C('--accent');ctx.globalAlpha=.6;ctx.fillRect(tx+2,ty+thh*.4*(1-lvl)+2,tw-4,thh*.4*lvl-4);ctx.globalAlpha=1;
+   txt(ctx,'위 물통',tx+tw/2,ty-8,C('--ink'),12,'center');
+   // 낙하 물줄기
+   if(ph>0&&lvl>0){ctx.strokeStyle=C('--accent');ctx.lineWidth=6*lvl+1;ctx.beginPath();ctx.moveTo(tx+tw,ty+thh*.35);ctx.quadraticCurveTo(tx+tw+60,ty+thh*.4,tx+tw+70,h*.62);ctx.stroke();}
+   // 수차
+   const wx=tx+tw+90,wy=h*.66,wr=Math.min(60,h*.13);ctx.save();ctx.translate(wx,wy);ctx.rotate(performance.now()/400*(ph>0&&lvl>0?1:0));ctx.strokeStyle=C('--ink');ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,wr,0,7);ctx.stroke();for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(wr*Math.cos(a),wr*Math.sin(a));ctx.stroke();}ctx.restore();txt(ctx,'수차',wx,wy+wr+18,C('--ink'),12,'center');
+   // 아래 물통과 스크루
+   ctx.strokeStyle=C('--ink');ctx.strokeRect(tx,h-60,lw-tx,40);ctx.fillStyle=C('--accent');ctx.globalAlpha=.35;ctx.fillRect(tx+2,h-40,lw-tx-4,18);ctx.globalAlpha=1;
+   ctx.strokeStyle=C('--muted');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(tx+10,h-40);ctx.lineTo(tx+10,ty+thh*.2);ctx.stroke();for(let k=0;k<12;k++){const yy=h-40-(h-40-ty-thh*.2)*k/12;ctx.beginPath();ctx.moveTo(tx+2,yy);ctx.lineTo(tx+18,yy-8);ctx.stroke();}
+   txt(ctx,'스크루',tx+24,h-70,C('--muted'),11);
+   // 반복별 막대
+   const gx=lw+14,gw=w-gx-14;txt(ctx,'반복할 때마다 남는 물의 위치 에너지',gx,32,C('--ink'),11);
+   const loss=+$('pp-fr').value*0.3;const cols=8;for(let k=0;k<cols;k++){const e=Math.pow(1-loss,k),bh=(h-110)*e,bw=gw/cols-4,X=gx+k*(gw/cols);ctx.fillStyle=k<=cyc?C('--good'):C('--grid');ctx.fillRect(X,h-50-bh,bw,bh);txt(ctx,k+'',X+bw/2,h-34,C('--muted'),10,'center',MONO);}
+   txt(ctx,'반복 횟수',gx+gw,h-18,C('--muted'),10,'right');}
+ }
+ reset();sims.perp={update,draw};
+})();
+
+/* ---------- 루프 ---------- */
+let last=performance.now();
+function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;const s=sims[active];if(s){s.update(dt);s.draw();}requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
