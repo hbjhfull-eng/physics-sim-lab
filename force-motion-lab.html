@@ -53,6 +53,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .ctl{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px 10px}
 .ctl label{font-size:14px;white-space:nowrap}
 .ctl output{font-family:var(--f-mono);font-size:13px;min-width:74px;text-align:right;font-variant-numeric:tabular-nums}
+.ctl .nv{display:inline-flex;align-items:center;gap:4px;justify-content:flex-end;min-width:96px}
+.ctl .nv input{width:66px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-family:var(--f-mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.ctl .nv input::-webkit-outer-spin-button,.ctl .nv input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ctl .nv input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.ctl .nv input.clamp{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--paper))}
+.ctl .nu{font-family:var(--f-mono);font-size:13px;color:var(--muted);min-width:24px}
 input[type=range]{width:100%;accent-color:var(--accent);min-width:0}
 select{font:14px var(--f-body);padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);grid-column:2 / 4}
 .row{display:flex;flex-wrap:wrap;gap:8px}
@@ -806,6 +812,41 @@ try{const t=localStorage.getItem('fml-tab');if(t)document.querySelector(`#tabs b
 let last=performance.now();
 function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;const s=sims[active];if(s){s.update(dt);s.draw();}requestAnimationFrame(loop);}
 requestAnimationFrame(loop);
+/* ---------- 슬라이더 값 직접 입력 ---------- */
+(function(){
+ const items=[];
+ document.querySelectorAll('input[type=range]').forEach(r=>{
+  const o=document.getElementById(r.id+'o');if(!o)return;
+  const st0=r.getAttribute('step')||'1',stN=+st0,isInt=Number.isInteger(stN);
+  const dec=isInt?0:Math.min(3,(st0.split('.')[1]||'').length+1);
+  const box=document.createElement('span');box.className='nv';
+  const n=document.createElement('input');n.type='number';n.min=r.min;n.max=r.max;n.step='any';n.inputMode='decimal';
+  n.setAttribute('aria-label',(document.querySelector('label[for="'+r.id+'"]')||{}).textContent||r.id);
+  n.title=`${r.min} ~ ${r.max} 범위에서 입력`;
+  const u=document.createElement('span');u.className='nu';
+  box.append(n,u);o.after(box);o.hidden=true;
+  const it={r,o,n,u,last:null,lastO:null};items.push(it);
+  const restore=()=>{if(r.step!==st0){r.step=st0;}};
+  r.addEventListener('pointerdown',restore);r.addEventListener('keydown',restore);
+  const commit=()=>{let v=parseFloat(String(n.value).replace(',','.'));
+   if(!isFinite(v)){sync(it,true);return;}
+   const lo=+r.min,hi=+r.max;let out=false;if(v<lo){v=lo;out=true;}if(v>hi){v=hi;out=true;}
+   v=+v.toFixed(dec);
+   r.step='any';r.value=v;
+   r.dispatchEvent(new Event('input',{bubbles:true}));r.dispatchEvent(new Event('change',{bubbles:true}));
+   sync(it,true);
+   if(out){n.classList.add('clamp');setTimeout(()=>n.classList.remove('clamp'),700);}};
+  n.addEventListener('change',commit);
+  n.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();n.select();}});
+  n.addEventListener('focus',()=>n.select());
+  sync(it,true);
+ });
+ function sync(it,force){const {r,o,n,u}=it;
+  if(force||r.value!==it.last){it.last=r.value;if(document.activeElement!==n||force)n.value=+(+r.value).toFixed(dec(r));}
+  if(o.textContent!==it.lastO){it.lastO=o.textContent;const m=o.textContent.match(/^\s*[−\-+]?[\d.,]+\s*(.*)$/);u.textContent=m?m[1]:'';}}
+ function dec(r){const s=r.getAttribute('step');if(s==='any')return 3;const p=(s||'1').split('.')[1];return p?Math.min(3,p.length+1):0;}
+ (function loop(){items.forEach(it=>sync(it,false));requestAnimationFrame(loop);})();
+})();
 </script>
 
 </body>
